@@ -1,0 +1,61 @@
+{
+  "project_info": {
+    "project_number": "492228514087",
+    "project_id": "default-demo-app-95419"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:492228514087:android:a7785221ee1a847e",
+        "android_client_info": {
+          "package_name": "com.whenrepay.rnd.whenrepay"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXFuJBYHeFKNKyvZL0mV1wqpH48RRQTM0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:492228514087:android:241b60f6b8201de6",
+        "android_client_info": {
+          "package_name": "rnd.gw.plani.co.kr.groupware"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXFuJBYHeFKNKyvZL0mV1wqpH48RRQTM0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
