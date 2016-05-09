@@ -22,15 +22,34 @@ public class PropertyManager {
 		mEditor = mPrefs.edit();
 	}
 
-	private static final String REG_ID = "regToken";
+	private static final String REG_USER = "regit";
+	public void setUser(Boolean isReg){
+		mEditor.putBoolean(REG_USER,isReg);
+		mEditor.commit();
+	}
+	public Boolean isUser(){
+		return mPrefs.getBoolean(REG_USER,false);
+	}
+
+	private static final String REG_DOMAIN = "domain";
+
+	public void setDomain(String domain){
+		mEditor.putString(REG_DOMAIN, domain);
+		mEditor.commit();
+	}
+	public String getDomain(){
+		return mPrefs.getString(REG_DOMAIN, "");
+	}
+
+	private static final String REG_TOKEN = "regToken";
 
 	public void setRegistrationToken(String regId) {
-		mEditor.putString(REG_ID, regId);
+		mEditor.putString(REG_TOKEN, regId);
 		mEditor.commit();
 	}
 	
 	public String getRegistrationToken() {
-		return mPrefs.getString(REG_ID, "");
+		return mPrefs.getString(REG_TOKEN, "");
 	}
 
 	private static final String FIELD_PUSH = "push";
@@ -53,4 +72,21 @@ public class PropertyManager {
 		return mPrefs.getInt(BADGE_COUNT,0);
 	}
 
+	private static final String REG_ID = "userid";
+	public void setUserId(String id){
+		mEditor.putString(REG_ID, id);
+		mEditor.commit();
+	}
+	public String getUserId(){
+		return mPrefs.getString(REG_ID, "");
+	}
+
+	private static final String REG_PW = "password";
+	public void setPassword(String password){
+		mEditor.putString(REG_PW,password);
+		mEditor.commit();
+	}
+	public String getPassword(){
+		return mPrefs.getString(REG_PW,"");
+	}
 }

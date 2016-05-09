@@ -26,11 +26,13 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.google.android.gms.gcm.GcmListenerService;
 
 import rnd.gw.plani.co.kr.groupware.MainActivity;
 import rnd.gw.plani.co.kr.groupware.R;
+import rnd.gw.plani.co.kr.groupware.SplashActivity;
 
 public class MyGcmListenerService extends GcmListenerService {
 
@@ -51,6 +53,7 @@ public class MyGcmListenerService extends GcmListenerService {
         String link = data.getString("link");
         String name = data.getString("name");
 
+        Log.i("MyGcmListenerService",title+message+name);
         int count = PropertyManager.getInstance().getBadgeCount();
         PropertyManager.getInstance().setBadgeCount(count++);
 
@@ -60,7 +63,7 @@ public class MyGcmListenerService extends GcmListenerService {
 
             // normal downstream message.
         }
-        sendNotificationContact(name,title,message);
+        sendNotificationContact(title,message,name);
         Intent intent = new Intent("android.intent.action.BADGE_COUNT_UPDATE");
         intent.putExtra("badge_count",count);
         intent.putExtra("badge_count_package_name",getApplicationContext().getPackageName());
@@ -110,14 +113,14 @@ public class MyGcmListenerService extends GcmListenerService {
     }
 
     private void sendNotificationContact(String name, String title,String message) {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, SplashActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
         Bitmap icon = BitmapFactory.decodeResource(getResources(), R.drawable.icon_notification);
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                .setTicker(title)
+                .setTicker("알림")
                 .setLargeIcon(icon)
                 .setSmallIcon(R.drawable.icon_notification)
                 .setContentTitle(name)
@@ -129,7 +132,7 @@ public class MyGcmListenerService extends GcmListenerService {
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        notificationManager.notify(1 /* ID of notification */, notificationBuilder.build());
+        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
 
     private void sendNotificationNote() {

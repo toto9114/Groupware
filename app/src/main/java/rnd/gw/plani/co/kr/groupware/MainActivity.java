@@ -2,12 +2,17 @@ package rnd.gw.plani.co.kr.groupware;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,48 +20,62 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.webkit.CookieManager;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.balysv.materialmenu.MaterialMenuDrawable;
 
+import net.htmlparser.jericho.Element;
+import net.htmlparser.jericho.Source;
+
 import org.xmlrpc.android.XMLRPCClient;
 import org.xmlrpc.android.XMLRPCException;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 
 import rnd.gw.plani.co.kr.groupware.GCM.PropertyManager;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements MenuFragment.OnMenuItemSelectedListener {
 
     MyWebView mWebView;
     ImageView splashView;
     TabLayout tabLayout;
-    private static final String HOME_URL = "http://gw.plani.co.kr";
+    public static final String EXTRA_URL = "url";
 
-    private AndroidWebInterface mWebInterface;
-
-
+    private String HOME_URL = "";
     private String deviceId = "";
     private String appId = "";
     private static final String ANDROID = "android";
 
     private static final String MAIN_URL = "http://gw.plani.co.kr/main";
     private static final String RECIEVE_URL = "http://gw.plani.co.kr/reception";
-    private static final String SEND_URL = "http://gw.plani.co.kr/send";
+    private static final String SEND_URL = "http://gw.plani.co.kr/transmission";
+    private static final String SEND_CONTACT_URL = "http://gw.plani.co.kr/send";
     private static final String UNDECIDE_URL = "http://gw.plani.co.kr/undecided";
     private static final String RESERVATION_URL = "http://gw.plani.co.kr/vehicle";
     private static final String FEEDS_URL = "http://gw.plani.co.kr/feeds";
 
+    private AndroidWebInterface mWebInterface;
     MaterialMenuDrawable materialMenu;
     FloatingActionButton fab;
-    boolean isNotiClick = false;
+    DrawerLayout drawerLayout;
+    AppBarLayout appBarLayout;
+    FrameLayout frameLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,13 +85,21 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         setTitle("플랜아이");
 
+        Intent intent = getIntent();
+        HOME_URL = "http://" + intent.getStringExtra(EXTRA_URL); //스플래시 화면으로부터 호스트주소 가져옴
+
+        appBarLayout = (AppBarLayout) findViewById(R.id.appbar);
+        frameLayout = (FrameLayout) findViewById(R.id.subToolbar);
         mWebView = (MyWebView) findViewById(R.id.webView);
+        splashView = (ImageView) findViewById(R.id.image_splash);
+        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mWebView.loadUrl("http://gw.plani.co.kr/send");
-                fab.setVisibility(View.GONE);
+                mWebView.loadUrl(SEND_CONTACT_URL);
+                Animation anim = AnimationUtils.loadAnimation(MainActivity.this, R.anim.slide_up);
+                mWebView.startAnimation(anim);
             }
         });
 //        View customBar = getLayoutInflater().inflate(R.layout.view_center_toolbar, null);
@@ -93,39 +120,22 @@ public class MainActivity extends AppCompatActivity {
         });
         materialMenu = new MaterialMenuDrawable(this, Color.WHITE, MaterialMenuDrawable.Stroke.THIN);
         toolbar.setNavigationIcon(materialMenu);
-        PropertyManager.getInstance().setBadgeCount(0);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
 
-        deviceId = PropertyManager.getInstance().getRegistrationToken();
+        tabLayout.addTab(tabLayout.newTab().setText("수신함"));
+        tabLayout.addTab(tabLayout.newTab().setText("송신함"));
 
-
-        splashView = (ImageView) findViewById(R.id.image_splash);
-        tabLayout = (TabLayout) findViewById(R.id.tablayout);
-
-        tabLayout.addTab(tabLayout.newTab().setText("홈"));
-        tabLayout.addTab(tabLayout.newTab().setText("업무연락"));
-        tabLayout.addTab(tabLayout.newTab().setText("미결함"));
-        tabLayout.addTab(tabLayout.newTab().setText("회의실예약"));
-        if (savedInstanceState == null) {
-
-        }
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                fab.setVisibility(View.GONE);
-                switch (tab.getPosition()) {
-                    case 0:
-                        mWebView.loadUrl(MAIN_URL);
-                        break;
-                    case 1:
-                        mWebView.loadUrl(RECIEVE_URL);
-                        fab.setVisibility(View.VISIBLE);
-                        break;
-                    case 2:
-                        mWebView.loadUrl(UNDECIDE_URL);
-                        break;
-                    case 3:
-                        mWebView.loadUrl(RESERVATION_URL);
-                        break;
+                if (tab.getPosition() == 0) {
+                    mWebView.loadUrl(RECIEVE_URL);
+                } else {
+                    mWebView.loadUrl(SEND_URL);
                 }
             }
 
@@ -140,11 +150,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        PropertyManager.getInstance().setBadgeCount(0);
+
+        deviceId = PropertyManager.getInstance().getRegistrationToken();
+
+        if (savedInstanceState == null) {
+
+        }
+
         WebSettings settings = mWebView.getSettings();
         settings.setJavaScriptEnabled(true);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
         mWebInterface = new AndroidWebInterface(this, mWebView);
         mWebView.addJavascriptInterface(mWebInterface, "Android");
+        mWebView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         mWebView.setWebChromeClient
                 (
@@ -197,55 +218,73 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                 );
-        new checkHosting().execute(URL_PARAM);
+        appBarLayout.setVisibility(View.VISIBLE);
+        frameLayout.setVisibility(View.VISIBLE);
+        fab.setVisibility(View.VISIBLE);
         appId = getAppId(HOME_URL);
-        mWebView.setWebViewClient(new MyWebViewCient());
 
+        Button btn = (Button)findViewById(R.id.btn_get);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new getFormData().execute(mWebView.getUrl());
+            }
+        });
+        new updateDeviceId().execute();
+
+        mWebView.setWebViewClient(new MyWebViewCient());
     }
 
-    private static final String URL_PARAM = "gw.plani.co.kr";
-
-    private static final String SERVER_URL = "http://gw.plani.co.kr/app/android/index";
-    private static final String METHOD1 = "CheckHosting";
-    private static final String METHOD2 = "UpdateDeviceID";
-
-    class checkHosting extends AsyncTask<String, Integer, Boolean> {
-        boolean isConn = false;
-
+    private class getFormData extends AsyncTask<String, Integer, Boolean> {
         @Override
         protected Boolean doInBackground(String... params) {
-            XMLRPCClient client = new XMLRPCClient(SERVER_URL);
             try {
-                if (params[0].contains("http://")) {
-                    StringBuilder sb = new StringBuilder(params[0]);
-                    params[0] = sb.substring(7);
-                }
-                HashMap<String, Boolean> result = (HashMap<String, Boolean>) client.call(METHOD1, params[0]);
-                if (!result.isEmpty()) {
-                    isConn = result.get("result").booleanValue();
-                }
-            } catch (XMLRPCException e) {
+                Source source = new Source(new URL("http://gw.plani.co.kr"));
+                source.fullSequentialParse();
+                List<Element> element = source.getAllElements();
+                Log.i("MainActivity",element.toString());
+            } catch (IOException e) {
                 e.printStackTrace();
             }
             return null;
         }
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-
-            super.onPostExecute(aBoolean);
-            if (isConn) {
-                mWebView.loadUrl(HOME_URL);
-                Toast.makeText(MainActivity.this, "success", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(MainActivity.this, "fail", Toast.LENGTH_SHORT).show();
-            }
-        }
-
     }
 
+    boolean isMenuSelect = false;
 
-    class updateDeviceId extends AsyncTask<String, Integer, Boolean> {
+    @Override
+    public void onMenuItemSelected(@MenuFragment.MenuMode int menuId) {//네비게이션 메뉴 선택시
+        tabLayout.setVisibility(View.GONE);
+        switch (menuId) {
+            case MenuFragment.MENU_ID_MAIN:
+                mWebView.loadUrl(MAIN_URL);
+                isMenuSelect = true;
+                break;
+            case MenuFragment.MENU_ID_CONTACT:
+                mWebView.loadUrl(RECIEVE_URL);
+                tabLayout.setVisibility(View.VISIBLE);
+                isMenuSelect = true;
+                break;
+            case MenuFragment.MENU_ID_UNDECIDE:
+                mWebView.loadUrl(UNDECIDE_URL);
+                isMenuSelect = true;
+                break;
+            case MenuFragment.MENU_ID_RESERVATION:
+                mWebView.loadUrl(RESERVATION_URL);
+                isMenuSelect = true;
+                break;
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+    }
+
+//    private static final String URL_PARAM = "gw.plani.co.kr";
+
+    private static final String SERVER_URL = "http://gw.plani.co.kr/app/android/index";
+    private static final String METHOD2 = "UpdateDeviceID";
+
+    class updateDeviceId extends AsyncTask<String, Integer, Boolean> { //사용자등록
         boolean isUpdate = false;
 
         @Override
@@ -253,27 +292,31 @@ public class MainActivity extends AppCompatActivity {
             XMLRPCClient client = new XMLRPCClient(SERVER_URL);
             try {
                 HashMap<String, Boolean> result = (HashMap<String, Boolean>) client.call(METHOD2, appId, deviceId, ANDROID);
+                Log.i("MainActivity",appId + "\n"+ deviceId);
                 if (!result.isEmpty()) {
                     isUpdate = result.get("result").booleanValue();
                 }
             } catch (XMLRPCException e) {
                 e.printStackTrace();
             }
+
             return isUpdate;
         }
 
         @Override
         protected void onPostExecute(Boolean aBoolean) {
             super.onPostExecute(aBoolean);
-            if (isUpdate) {
-                Toast.makeText(MainActivity.this, "update ," + "deviceId : " + deviceId, Toast.LENGTH_SHORT).show();
+            if (isUpdate) { //사용자 등록이 제대로 완료되면
+                mWebView.loadUrl(HOME_URL);
+                new getFormData().execute("http://gw.plani.co.kr");
+                Toast.makeText(MainActivity.this, "update", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(MainActivity.this, "update fail", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    protected String getAppId(String url) {
+    protected String getAppId(String url) { //사용자 app_id 쿠키에서 빼내오기
         CookieManager cookieManager = CookieManager.getInstance();
         String cookie = cookieManager.getCookie(url);
         String temp[] = cookie.split(";");
@@ -286,21 +329,49 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+    boolean isLoading = false; //페이지 로딩중인지 판단
+    private static final String LOGIN_URL = "/login/accounts/login/redirect/eNortjK0UtJXsgZcMAkSAcc.";
+    MyProgressDialog dialog = new MyProgressDialog();
+
     private class MyWebViewCient extends WebViewClient {
+        @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            super.onPageStarted(view, url, favicon);
+//            if (!dialog.isAdded())
+//                dialog.show(getSupportFragmentManager(), "dialog");
+            isLoading = true;
+        }
+
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
-            splashView.setVisibility(View.GONE);
+            isLoading = false;
+            //dialog.dismiss();
+            if (isMenuSelect) {
+                mWebView.clearHistory();
+                isMenuSelect = false;
+            }
+
+            //splashView.setVisibility(View.GONE);
         }
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            Log.i("MainActivity", url);
+            if (url.equals(HOME_URL + LOGIN_URL)) {//로그인페이지일때 툴바 보이지 않게
+                appBarLayout.setVisibility(View.GONE);
+                frameLayout.setVisibility(View.GONE);
+                fab.setVisibility(View.GONE);
+            } else {
+                appBarLayout.setVisibility(View.VISIBLE);
+                frameLayout.setVisibility(View.VISIBLE);
+                fab.setVisibility(View.VISIBLE);
+            }
+//            Log.i("MainActivity", url);
             if (Uri.parse(url).getHost().equals("gw.plani.co.kr")) {
                 // This is my web site, so do not override; let my WebView load the page
                 if (url.equals("http://gw.plani.co.kr/")) {
-                    new checkHosting().execute(HOME_URL);
-                    new updateDeviceId().execute();
+//                    new updateDeviceId().execute();
+                    Log.i("MainActivity", "test");
                 }
                 return false;
             }
@@ -315,26 +386,34 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         //super.onBackPressed();
-        if (mWebView.canGoBack()) {
-            mWebView.goBack();
+        if (isLoading) { //로딩중에 back키 먹히지 않게
+            return;
+        }
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
         } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.alert_title)
-                    .setMessage(R.string.alert_finish)
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    })
-                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
+            if (mWebView.canGoBack()) {
+                mWebView.goBack();
+            } else {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle(R.string.alert_title)
+                        .setMessage(R.string.alert_finish)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+                        })
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
 
-                        }
-                    })
-                    .setCancelable(false)
-                    .show();
+                            }
+                        })
+                        .setCancelable(false)
+                        .show();
+            }
         }
     }
 
@@ -356,8 +435,8 @@ public class MainActivity extends AppCompatActivity {
 //        if (id == R.id.action_settings) {
 //            return true;
 //        }
-        if (id == R.id.notify) {
-            mWebView.loadUrl("http://gw.plani.co.kr/feeds");
+        if (id == R.id.notify) { //전체알림보기
+            mWebView.loadUrl(FEEDS_URL);
             return true;
         }
 

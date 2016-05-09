@@ -7,8 +7,9 @@
     <string name="alert_reply">새로운 댓글이 있습니다</string>
     <string name="alert_contact">새로운 업무연락이 있습니다</string>
     <string name="alert_note">새로운 쪽지가 도착했습니다</string>
-    <string name="notify">notify</string>
-
-<!-- TODO: Remove or change this placeholder text -->
+    <string name="notify">전체알림보기</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

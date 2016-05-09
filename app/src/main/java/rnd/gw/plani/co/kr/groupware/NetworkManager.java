@@ -1,9 +1,5 @@
 package rnd.gw.plani.co.kr.groupware;
 
-/**
- * Created by RND on 2016-03-30.
- */
-
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -80,11 +76,11 @@ public class NetworkManager {
 //            KeyStore keyStore = KeyStore.getInstance(keyStoreType);
 //            keyStore.load(null, null);
 //            keyStore.setCertificateEntry("ca", ca);
-
+//
 //            String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
 //            TrustManagerFactory tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
 //            tmf.init(keyStore);
-
+//
 //            SSLContext sc = SSLContext.getInstance("TLS");
 //            sc.init(null, tmf.getTrustManagers(), null);
 //            HostnameVerifier hv = new HostnameVerifier() {
@@ -155,15 +151,14 @@ public class NetworkManager {
 
     }
 
-    private static final String LOGIN_URL = "http://gw.plani.co.kr/login/accounts/do_login";
-
-    public Request login(Context context, String id, String password, final OnResultListener<Boolean> listener) {
+    private static final String LOGIN_URL = "http://gw.plani.co.kr/login/accounts/do_login/redirect/eNortjK0UtJXsgZcMAkSAcc.";
+    public Request login(Context context, String userid, String passwd, final OnResultListener<Boolean> listener) {
 
         String url = String.format(LOGIN_URL);
 
         RequestBody body = new FormBody.Builder()
-                .add("userid", id)
-                .add("passwd", password)
+                .add("userid", userid)
+                .add("userid", passwd)
                 .build();
 
 
@@ -186,8 +181,10 @@ public class NetworkManager {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                //Gson gson = new Gson();
                 XMLParser parser = new XMLParser();
-                Boolean data = parser.fromXml(response.body().byteStream(), "login", Boolean.class);
+//                Boolean data = gson.fromJson(text, Boolean.class);
+                Boolean data = parser.fromXml(response.body().byteStream(),"_ga",Boolean.class);
                 callbackObject.result = data;
                 Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
                 mHandler.sendMessage(msg);
@@ -196,44 +193,5 @@ public class NetworkManager {
         return request;
     }
 
-    private static final String SERVER_URL = "http://gw.plani.co.kr/app/android/index";
 
-    public Request checkHosting(Context context, String hostingUrl, final OnResultListener<Boolean> listener) {
-
-        String url = String.format(SERVER_URL);
-
-        RequestBody body = null;
-        body = new FormBody.Builder()
-                .add("CheckHosting", "gw.plani.co.kr")
-                .build();
-
-
-        final CallbackObject<Boolean> callbackObject = new CallbackObject<>();
-        Request request = new Request.Builder().url(url)
-                .tag(context)
-                .post(body)
-                .build();
-
-        callbackObject.request = request;
-        callbackObject.listener = listener;
-
-        mClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                callbackObject.exception = e;
-                Message msg = mHandler.obtainMessage(MESSAGE_FAILURE, callbackObject);
-                mHandler.sendMessage(msg);
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                XMLParser parser = new XMLParser();
-                Boolean data = parser.fromXml(response.body().byteStream(), "Result", Boolean.class);
-                callbackObject.result = data;
-                Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
-                mHandler.sendMessage(msg);
-            }
-        });
-        return request;
-    }
 }

@@ -36,4 +36,5 @@ dependencies {
     compile 'com.balysv.materialmenu:material-menu-toolbar:1.5.4'
     compile 'com.balysv.materialmenu:material-menu:1.5.4'
     compile 'com.android.support:support-v4:23.2.1'
+    compile 'net.htmlparser.jericho:jericho-html:3.4'
 }
