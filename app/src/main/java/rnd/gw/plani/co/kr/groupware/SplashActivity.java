@@ -14,6 +14,7 @@ import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,9 +26,15 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import org.xmlrpc.android.XMLRPCClient;
 import org.xmlrpc.android.XMLRPCException;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import rnd.gw.plani.co.kr.groupware.GCM.PropertyManager;
 import rnd.gw.plani.co.kr.groupware.GCM.RegistrationIntentService;
 
@@ -42,15 +49,18 @@ public class SplashActivity extends AppCompatActivity {
     private static final String METHOD1 = "CheckHosting";
     private static final String METHOD2 = "UpdateDeviceID";
     boolean isUser;
-    private String domain ="";
+    private String domain = "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         editDomain = (EditText) findViewById(R.id.edit_domain);
-        domainView = (Button)findViewById(R.id.btn_domain);
+        domainView = (Button) findViewById(R.id.btn_domain);
 
 
+//        cookieManager = new CookieManager(new PersistentCookieStore(this), CookiePolicy.ACCEPT_ALL);
+//        CookieHandler.setDefault(cookieManager);
         Button btn = (Button) findViewById(R.id.btn_regist);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -61,10 +71,16 @@ public class SplashActivity extends AppCompatActivity {
             }
         });
 
-        if(!TextUtils.isEmpty(PropertyManager.getInstance().getDomain())){
+        if (!TextUtils.isEmpty(PropertyManager.getInstance().getDomain())) {
             domainView.setText(PropertyManager.getInstance().getDomain());
         }
 
+        domainView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new checkHosting().execute(domainView.getText().toString());
+            }
+        });
         mRegistrationBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -74,7 +90,67 @@ public class SplashActivity extends AppCompatActivity {
         setUpIfNeeded();
     }
 
+//    private String getPostDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
+//        StringBuilder result = new StringBuilder();
+//        boolean first = true;
+//        for (Map.Entry<String, String> entry : params.entrySet()) {
+//            if (first)
+//                first = false;
+//            else
+//                result.append("&");
+//
+//            result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+//            result.append("=");
+//            result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+//        }
+//
+//        return result.toString();
+//    }
+
+    //CookieManager cookieManager;
+    private static final String LOGIN_URL = "http://gw.plani.co.kr/login/accounts/do_login/redirect/eNortjK0UtJXsgZcMAkSAcc.";
+
+    private class doLogin extends AsyncTask<String, Integer, Boolean> {
+        @Override
+        protected Boolean doInBackground(String... params) {
+            try {
+                String id = PropertyManager.getInstance().getUserId();
+                String password = PropertyManager.getInstance().getPassword();
+
+                OkHttpClient client = new OkHttpClient();
+
+                RequestBody body = new FormBody.Builder()
+                        .add("userid", id)
+                        .add("passwd", password)
+                        .build();
+                Request request = new Request.Builder().url(LOGIN_URL)
+                        .tag(SplashActivity.this)
+                        .post(body)
+                        .build();
+                Response response = client.newCall(request).execute();
+                boolean isRedirect = response.isRedirect();
+                if (!response.isSuccessful()) throw new IOException("Unexpected code" + response);
+
+                Log.i("SplashAcitivity", response.headers().toString());
+
+                PropertyManager.getInstance().setUserId(id);
+                PropertyManager.getInstance().setPassword(password);
+                PropertyManager.getInstance().setUser(true);
+                Intent i = new Intent(SplashActivity.this, MainActivity.class);
+                i.putExtra(MainActivity.EXTRA_URL, PropertyManager.getInstance().getDomain());
+                startActivity(i);
+                finish();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
     LoginDialog dialog;
+
     class checkHosting extends AsyncTask<String, Integer, Boolean> {
         boolean isConn = false;
 
@@ -99,15 +175,18 @@ public class SplashActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Boolean aBoolean) {
             super.onPostExecute(aBoolean);
-            if (isConn){
-                domainView.setText(domain);
-                PropertyManager.getInstance().setDomain(domain);
+            if (isConn) {
+                if (!TextUtils.isEmpty(domain)) {
+                    domainView.setText(domain);
+                }
+                PropertyManager.getInstance().setDomain(domainView.getText().toString());
                 Toast.makeText(SplashActivity.this, "도메인이 성공적으로 등록되었습니다.", Toast.LENGTH_SHORT).show();
                 dialog = new LoginDialog();
-                dialog.show(getSupportFragmentManager(),"dialog");
+                dialog.setCancelable(false);
+                dialog.show(getSupportFragmentManager(), "dialog");
                 //로그인 다이얼로그 띄우고
-            }else{
-                Toast.makeText(SplashActivity.this, "잘못된 도메인입니다.",Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(SplashActivity.this, "잘못된 도메인입니다.", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -146,6 +225,7 @@ public class SplashActivity extends AppCompatActivity {
         }
         return true;
     }
+
     Handler handler = new Handler(Looper.getMainLooper());
 
     private void doRealStart() {
@@ -154,31 +234,14 @@ public class SplashActivity extends AppCompatActivity {
             protected Boolean doInBackground(Void... params) {
                 String registrationToken = PropertyManager.getInstance().getRegistrationToken();
 
-                isUser =  PropertyManager.getInstance().isUser();
-//                handler.post(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        new checkHosting().execute(domain);
-//                    }
-//                });
+                isUser = PropertyManager.getInstance().isUser();
 
-                if(isUser){
-                    String id = PropertyManager.getInstance().getUserId();
-                    String pw = PropertyManager.getInstance().getPassword();
-                    NetworkManager.getInstance().login(SplashActivity.this, id, pw, new NetworkManager.OnResultListener<Boolean>() {
+                if (isUser) {
+                    handler.post(new Runnable() {
                         @Override
-                        public void onSuccess(Request request, Boolean result) {
-                            if(!TextUtils.isEmpty(PropertyManager.getInstance().getDomain())){
-                                Intent i = new Intent(SplashActivity.this, MainActivity.class);
-                                i.putExtra(MainActivity.EXTRA_URL, PropertyManager.getInstance().getDomain());
-                                startActivity(i);
-                                finish();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Request request, int code, Throwable cause) {
-
+                        public void run() {
+                            startActivity(new Intent(SplashActivity.this,MainActivity.class));
+                            finish();
                         }
                     });
                 }

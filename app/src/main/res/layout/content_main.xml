@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:text="get"
             android:id="@+id/btn_get"
-            android:layout_gravity="right|bottom" />
+            android:layout_gravity="left|bottom" />
     </FrameLayout>
 
     <android.support.design.widget.AppBarLayout
