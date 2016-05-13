@@ -237,13 +237,8 @@ public class SplashActivity extends AppCompatActivity {
                 isUser = PropertyManager.getInstance().isUser();
 
                 if (isUser) {
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            startActivity(new Intent(SplashActivity.this,MainActivity.class));
-                            finish();
-                        }
-                    });
+                    startActivity(new Intent(SplashActivity.this, MainActivity.class));
+                    finish();
                 }
                 return null;
             }

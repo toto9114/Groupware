@@ -12,4 +12,29 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="html_header"><![CDATA[<head>
+<meta charset=UTF-8>
+<title>i-SMART GROUPWARE Ⅱ</title>
+<meta http-equiv=X-UA-Compatible content="IE=edge">
+<meta name=viewport content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name=description content="지식기반 IT서비스 기업 업무환경에 최적화된 유무선 통합 그룹웨어"/>
+<meta name=keywords content="i-SMART GROUPWARE Ⅱ, 그룹웨어"/>
+<meta name=copyright content="Copyright 2013 i-SMART Groupware all rights reserved."/>
+<meta name=author content=Plani />
+<meta property=og:title content="i-SMART GROUPWARE Ⅱ">
+<meta property=og:url content="http://gw.plani.co.kr/">
+<meta property=og:image content="http://gw.plani.co.kr/images/common/logo_128x128.png">
+<meta property=og:description content="지식기반 IT서비스 기업 업무환경에 최적화된 유무선 통합 그룹웨어">
+<meta name=twitter:card content=summary>
+<meta name=twitter:title content="i-SMART GROUPWARE Ⅱ">
+<meta name=twitter:url content="http://gw.plani.co.kr/">
+<meta name=twitter:image content="http://gw.plani.co.kr/images/common/logo_128x128.png">
+<meta name=twitter:description content="지식기반 IT서비스 기업 업무환경에 최적화된 유무선 통합 그룹웨어">
+<link rel=stylesheet href="_res/A.libs,,_bootstrap,,_css,,_bootstrap.min.css,,qv==20130306+css,,_theme.css+css,,_layout.css,,qv==20140731+css,,_main.css,Mcc.WHnLjjiT2e.css.pagespeed.cf.Ak15CogIbx.css">
+<link rel=stylesheet href="_res/A.css,,_iSmartCode.css,,qv==20150227+css,,_project.css,,qv==20140306+libs,,_snap,,_snap.css+font-awesome,,_css,,_font-awesome.min.css+libs,,_jquery,,_jquery-ui.css+libs,,_colorbox,,_colorbox.css+libs,,_datepicker,,_css,,_datepicker.css+libs,,_datetimepicker,,_css,,_bootstrap-datetimepicker.css+libs,,_fullcalendar,,_fullcalendar.css,Mcc.m9XKvXr68y.css.pagespeed.cf.yrDzJiItk3.css">
+<script src="_res/js/modernizr-2.6.2.min.js.pagespeed.jm.J9fY36u0se.js"></script>
+        <!--[if lt IE 9]>
+        <script src="//oss.maxcdn.com/libs/html5shiv/3.7.2/html5shiv.js"></script>
+        <script src="//oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]--><link rel=dns-prefetch href="//ajax.googleapis.com"></head>]]></string>
 </resources>
