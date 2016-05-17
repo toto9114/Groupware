@@ -10,7 +10,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.TabLayout;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -32,7 +31,6 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -61,13 +59,8 @@ import org.jsoup.nodes.Element;
 import org.xmlrpc.android.XMLRPCClient;
 import org.xmlrpc.android.XMLRPCException;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -80,7 +73,7 @@ public class MainActivity extends AppCompatActivity
 
     MyWebView mWebView;
     ImageView splashView;
-    TabLayout tabLayout;
+
     public static final String EXTRA_URL = "url";
 
     private String HOME_URL = "";
@@ -89,19 +82,14 @@ public class MainActivity extends AppCompatActivity
     private static final String ANDROID = "android";
 
     private static final String MAIN_URL = "http://gw.plani.co.kr/main";
-    private static final String RECIEVE_URL = "http://gw.plani.co.kr/reception";
-    private static final String SEND_URL = "http://gw.plani.co.kr/transmission";
+
     private static final String SEND_CONTACT_URL = "http://gw.plani.co.kr/send";
-    private static final String UNDECIDE_URL = "http://gw.plani.co.kr/undecided";
-    private static final String RESERVATION_URL = "http://gw.plani.co.kr/vehicle";
-    private static final String FEEDS_URL = "http://gw.plani.co.kr/feeds";
 
     private AndroidWebInterface mWebInterface;
     MaterialMenuDrawable materialMenu;
     FloatingActionButton fab;
     DrawerLayout drawerLayout;
     AppBarLayout appBarLayout;
-    FrameLayout frameLayout;
 
 
     boolean isUpdate = false;
@@ -126,10 +114,9 @@ public class MainActivity extends AppCompatActivity
         String password = PropertyManager.getInstance().getPassword();
 
         appBarLayout = (AppBarLayout) findViewById(R.id.appbar);
-        frameLayout = (FrameLayout) findViewById(R.id.subToolbar);
+
         mWebView = (MyWebView) findViewById(R.id.webView);
         splashView = (ImageView) findViewById(R.id.image_splash);
-        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -159,30 +146,6 @@ public class MainActivity extends AppCompatActivity
                 this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
-
-        tabLayout.addTab(tabLayout.newTab().setText("수신함"));
-        tabLayout.addTab(tabLayout.newTab().setText("송신함"));
-
-        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                if (tab.getPosition() == 0) {
-                    new getHtml().execute(RECIEVE_URL);
-                } else {
-                    new getHtml().execute(SEND_URL);
-                }
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
 
         PropertyManager.getInstance().setBadgeCount(0);
 
@@ -250,7 +213,6 @@ public class MainActivity extends AppCompatActivity
                         }
                 );
         appBarLayout.setVisibility(View.VISIBLE);
-        frameLayout.setVisibility(View.VISIBLE);
         fab.setVisibility(View.VISIBLE);
 
         try {
@@ -342,16 +304,17 @@ public class MainActivity extends AppCompatActivity
             super.onPostExecute(aBoolean);
 //            if (!TextUtils.isEmpty(parseData))
 //                setWebView(parseData);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.container, new ContactFragment())
-                    .addToBackStack(null)
-                    .commit();
+//            getSupportFragmentManager().beginTransaction()
+//                    .replace(R.id.container, new ContactFragment())
+//                    .addToBackStack(null)
+//                    .commit();
         }
     }
 
-    public HttpClient getHttpClient(){
+    public HttpClient getHttpClient() {
         return httpClient;
     }
+
     List<RecieveData> list = new ArrayList<>();
 
     private void parseToList(Element tBody) {
@@ -366,10 +329,6 @@ public class MainActivity extends AppCompatActivity
             Log.i("MainActivity", "link: " + data.link);
             Log.i("MainActivity", "title: " + data.title);
         }
-    }
-
-    public List<RecieveData> getContactList() {
-        return list;
     }
 
     private class login extends AsyncTask<String, Integer, Boolean> {
@@ -408,7 +367,7 @@ public class MainActivity extends AppCompatActivity
                         String cookie = cookies.get(i).getName() + "=" + cookies.get(i).getValue();
                         cookieManager.setCookie(cookies.get(i).getDomain(), cookie);
                     }
-                    Thread.sleep(500);
+//                    Thread.sleep(500);
                 }
 
                 HttpEntity resEntity = responsePost.getEntity();
@@ -426,8 +385,6 @@ public class MainActivity extends AppCompatActivity
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             return null;
@@ -448,56 +405,10 @@ public class MainActivity extends AppCompatActivity
 
     private static final String DO_LOGIN_URL = "http://gw.plani.co.kr/login/accounts/do_login/redirect/eNortjK0UtJXsgZcMAkSAcc.";
 
-    private class doLogin extends AsyncTask<String, Integer, Boolean> {
-        @Override
-        protected Boolean doInBackground(String... params) {
-            try {
-                String id = PropertyManager.getInstance().getUserId();
-                String password = PropertyManager.getInstance().getPassword();
-
-                URL url = new URL(DO_LOGIN_URL);
-                String param = "userid=" + id + "&" + "passwd=" + password;
-
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setDoOutput(true);
-                conn.setChunkedStreamingMode(0);
-                conn.setReadTimeout(10000);
-                conn.setConnectTimeout(15000);
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-
-                OutputStream os = new BufferedOutputStream(conn.getOutputStream());
-                os.write(param.getBytes("UTF-8"));
-                int code = conn.getResponseCode();
-                String cookie = "";
-                if (code >= HttpURLConnection.HTTP_OK && code < HttpURLConnection.HTTP_MULT_CHOICE) {
-                    List<String> cookies = conn.getHeaderFields().get("Set-Cookie");
-                    if (cookies != null) {
-                        for (String c : cookies) {
-                            Log.i("MainActivity", c.split(";\\s*")[0]);
-                        }
-                    }
-                }
-                Log.i("MainAcitivity", cookie);
-
-                PropertyManager.getInstance().setUserId(id);
-                PropertyManager.getInstance().setPassword(password);
-                PropertyManager.getInstance().setUser(true);
-                return true;
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
-
     boolean isMenuSelect = false;
 
     @Override
     public void onMenuItemSelected(@MenuFragment.MenuMode int menuId) {//네비게이션 메뉴 선택시
-        tabLayout.setVisibility(View.GONE);
         switch (menuId) {
             case MenuFragment.MENU_ID_MAIN:
 //                mWebView.loadUrl(MAIN_URL);
@@ -505,23 +416,24 @@ public class MainActivity extends AppCompatActivity
                 isMenuSelect = true;
                 break;
             case MenuFragment.MENU_ID_CONTACT:
-//                mWebView.loadUrl(RECIEVE_URL);
-                //new getHtml().execute(RECIEVE_URL);
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.container, new ContactFragment())
                         .addToBackStack(null)
                         .commit();
-                tabLayout.setVisibility(View.VISIBLE);
                 isMenuSelect = true;
                 break;
             case MenuFragment.MENU_ID_UNDECIDE:
-//                mWebView.loadUrl(UNDECIDE_URL);
-                new getHtml().execute(UNDECIDE_URL);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.container, new UndecideFragment())
+                        .addToBackStack(null)
+                        .commit();
                 isMenuSelect = true;
                 break;
             case MenuFragment.MENU_ID_RESERVATION:
-//                mWebView.loadUrl(RESERVATION_URL);
-                new getHtml().execute(RESERVATION_URL);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.container, new ReservationFragment())
+                        .addToBackStack(null)
+                        .commit();
                 isMenuSelect = true;
                 break;
         }
@@ -576,7 +488,6 @@ public class MainActivity extends AppCompatActivity
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
             isLoading = false;
-//            Log.i("MainAcitivity", url);
             //dialog.dismiss();
             if (isMenuSelect) {
                 mWebView.clearHistory();
@@ -600,18 +511,16 @@ public class MainActivity extends AppCompatActivity
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             if (url.equals(HOME_URL + LOGIN_URL)) {//로그인페이지일때 툴바 보이지 않게
                 appBarLayout.setVisibility(View.GONE);
-                frameLayout.setVisibility(View.GONE);
                 fab.setVisibility(View.GONE);
             } else {
                 appBarLayout.setVisibility(View.VISIBLE);
-                frameLayout.setVisibility(View.VISIBLE);
                 fab.setVisibility(View.VISIBLE);
             }
-//            Log.i("MainActivity", url);
+
             if (Uri.parse(url).getHost().equals("gw.plani.co.kr")) {
                 // This is my web site, so do not override; let my WebView load the page
                 if (url.equals("http://gw.plani.co.kr/")) {
-//                    Log.i("MainActivity", "test");
+
                 }
                 return false;
             }
@@ -691,7 +600,8 @@ public class MainActivity extends AppCompatActivity
 //        }
         if (id == R.id.notify) { //전체알림보기
 //            mWebView.loadUrl(FEEDS_URL);
-            new getHtml().execute(FEEDS_URL);
+
+            startActivity(new Intent(this, NotifyActivity.class));
             return true;
         }
 
