@@ -1,11 +1,14 @@
 package rnd.gw.plani.co.kr.groupware;
 
 import android.content.Context;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
@@ -95,86 +98,197 @@ public class NetworkManager {
         IOException exception;
         OnResultListener<T> listener;
     }
+    public HttpGet getAllNotify(Context context, String url, final OnResultListener<Element> listener){
+        final CallbackObject<Element> callbackObject = new CallbackObject<>();
+        final HttpGet request = new HttpGet(url);
+        new AsyncTask<String, Integer, Boolean>() {
+            @Override
+            protected Boolean doInBackground(String... params) {
+                try {
+                    callbackObject.request = request;
+                    callbackObject.listener = listener;
+                    HttpResponse response = null;
+                    response = httpClient.execute(request);
+                    HttpEntity entity = response.getEntity();
+                    String result = EntityUtils.toString(entity, "UTF-8");
+                    Document doc = Jsoup.parse(result);
+                    Element element = doc.select("div.gw_feed.feeds_page").get(0);
 
-    public HttpGet getHtml(Context context, String url, final OnResultListener<String> listener) {
-
-        final CallbackObject<String> callbackObject = new CallbackObject<>();
-        HttpGet request = new HttpGet(url);
-
-        callbackObject.request = request;
-        callbackObject.listener = listener;
-        HttpResponse response = null;
-        try {
-            response = httpClient.execute(request);
-            HttpEntity entity = response.getEntity();
-            String result = EntityUtils.toString(entity, "UTF-8");
-            Document doc = Jsoup.parse(result);
-            Element element = doc.select("table.bbs_table.table-hover").get(0);
-            if (response != null) {
-                callbackObject.result = element.toString();
-                Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
-                mHandler.sendMessage(msg);
+                    if (response != null) {
+                        callbackObject.result = element;
+                        Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
+                        mHandler.sendMessage(msg);
+                    }
+                } catch (IOException e) {
+                    callbackObject.exception = e;
+                    Message msg = mHandler.obtainMessage(MESSAGE_FAILURE, callbackObject);
+                    mHandler.sendMessage(msg);
+                }
+                return null;
             }
-        } catch (IOException e) {
-//            e.printStackTrace();
-            callbackObject.exception = e;
-            Message msg = mHandler.obtainMessage(MESSAGE_FAILURE, callbackObject);
-            mHandler.sendMessage(msg);
-        }
+
+            @Override
+            protected void onPostExecute(Boolean aBoolean) {
+                super.onPostExecute(aBoolean);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    cookieManager.flush();
+                }
+                CookieSyncManager.getInstance().sync();
+            }
+        }.execute();
+        return request;
+    }
+
+
+    public HttpGet getContactSection(Context context, String url, final OnResultListener<Element> listener){
+        final CallbackObject<Element> callbackObject = new CallbackObject<>();
+        final HttpGet request = new HttpGet(url);
+        new AsyncTask<String, Integer, Boolean>() {
+            @Override
+            protected Boolean doInBackground(String... params) {
+                try {
+                    callbackObject.request = request;
+                    callbackObject.listener = listener;
+                    HttpResponse response = null;
+                    response = httpClient.execute(request);
+                    HttpEntity entity = response.getEntity();
+                    String result = EntityUtils.toString(entity, "UTF-8");
+                    Document doc = Jsoup.parse(result);
+                    Element element = doc.select("section#content").get(0);
+                    if (response != null) {
+                        callbackObject.result = element;
+                        Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
+                        mHandler.sendMessage(msg);
+                    }
+                } catch (IOException e) {
+                    callbackObject.exception = e;
+                    Message msg = mHandler.obtainMessage(MESSAGE_FAILURE, callbackObject);
+                    mHandler.sendMessage(msg);
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean aBoolean) {
+                super.onPostExecute(aBoolean);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    cookieManager.flush();
+                }
+                CookieSyncManager.getInstance().sync();
+            }
+        }.execute();
+        return request;
+    }
+
+    public HttpGet getHtml(final Context context, final String url, final OnResultListener<String> listener) {
+        final CallbackObject<String> callbackObject = new CallbackObject<>();
+        final HttpGet request = new HttpGet(url);
+        new AsyncTask<String, Integer, Boolean>() {
+            @Override
+            protected Boolean doInBackground(String... params) {
+                try {
+                    callbackObject.request = request;
+                    callbackObject.listener = listener;
+                    HttpResponse response = null;
+                    response = httpClient.execute(request);
+                    HttpEntity entity = response.getEntity();
+                    String result = EntityUtils.toString(entity, "UTF-8");
+                    Document doc = Jsoup.parse(result);
+                    Element element = doc.select("table.bbs_table").get(0);
+                    if (response != null) {
+                        callbackObject.result = element.toString();
+                        Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
+                        mHandler.sendMessage(msg);
+                    }
+                } catch (IOException e) {
+                    callbackObject.exception = e;
+                    Message msg = mHandler.obtainMessage(MESSAGE_FAILURE, callbackObject);
+                    mHandler.sendMessage(msg);
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean aBoolean) {
+                super.onPostExecute(aBoolean);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    cookieManager.flush();
+                }
+                CookieSyncManager.getInstance().sync();
+            }
+        }.execute();
+
         return request;
     }
 
     private static final String DO_LOGIN_URL = "http://gw.plani.co.kr/login/accounts/do_login/redirect/eNortjK0UtJXsgZcMAkSAcc.";
 
-    public HttpPost login(Context context, String url, String id, String password, final OnResultListener<String> listener) {
-        final CallbackObject<String> callbackObject = new CallbackObject<>();
-
-        ArrayList<NameValuePair> nameValuePairs =
+    public HttpPost login(Context context, String url, String id, String password, final OnResultListener<Element> listener) {
+        final CallbackObject<Element> callbackObject = new CallbackObject<>();
+        final ArrayList<NameValuePair> nameValuePairs =
                 new ArrayList<NameValuePair>();
         nameValuePairs.add(new BasicNameValuePair("userid", id));
         nameValuePairs.add(new BasicNameValuePair("passwd", password));
-        HttpPost httpPost = new HttpPost(DO_LOGIN_URL);
-        try {
-            callbackObject.request = httpPost;
-            callbackObject.listener = listener;
-            UrlEncodedFormEntity entityRequest =
-                    new UrlEncodedFormEntity(nameValuePairs, "UTF-8");
+        final HttpPost httpPost = new HttpPost(DO_LOGIN_URL);
+        new AsyncTask<String, Integer, Boolean>() {
+            @Override
+            protected Boolean doInBackground(String... params) {
+                try {
 
-            httpPost.setEntity(entityRequest);
+                    callbackObject.request = httpPost;
+                    callbackObject.listener = listener;
+                    UrlEncodedFormEntity entityRequest =
+                            new UrlEncodedFormEntity(nameValuePairs, "UTF-8");
 
-            HttpResponse responsePost = httpClient.execute(httpPost);
-            List<Cookie> cookies = httpClient.getCookieStore().getCookies();
-            if (cookies.isEmpty()) {
-                Log.i("MainActivity", "None");
-            } else {
-                for (int i = 0; i < cookies.size(); i++) {
-                    if (cookies.get(i).getName().equals("app_id")) {
-                        PropertyManager.getInstance().setAppId(cookies.get(i).getValue());
+                    httpPost.setEntity(entityRequest);
+
+                    HttpResponse responsePost = httpClient.execute(httpPost);
+                    List<Cookie> cookies = httpClient.getCookieStore().getCookies();
+                    if (cookies.isEmpty()) {
+                        Log.i("MainActivity", "None");
+                    } else {
+                        for (int i = 0; i < cookies.size(); i++) {
+                            if (cookies.get(i).getName().equals("app_id")) {
+                                PropertyManager.getInstance().setAppId(cookies.get(i).getValue());
+                            }
+
+                            String cookie = cookies.get(i).getName() + "=" + cookies.get(i).getValue();
+                            cookieManager.setCookie(cookies.get(i).getDomain(), cookie);
+                        }
+                        Thread.sleep(500);
                     }
 
-                    String cookie = cookies.get(i).getName() + "=" + cookies.get(i).getValue();
-                    cookieManager.setCookie(cookies.get(i).getDomain(), cookie);
+                    HttpEntity resEntity = responsePost.getEntity();
+                    String result = EntityUtils.toString(resEntity, "UTF-8");
+                    Document doc = Jsoup.parse(result);
+                    Element element = doc.select("section#content").get(0);
+                    if (responsePost != null) {
+                        callbackObject.result = element;
+                        Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
+                        mHandler.sendMessage(msg);
+                    }
+                } catch (IOException e) {
+//                e.printStackTrace();
+                    callbackObject.exception = e;
+                    Message msg = mHandler.obtainMessage(MESSAGE_FAILURE, callbackObject);
+                    mHandler.sendMessage(msg);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-                Thread.sleep(500);
+                return null;
             }
 
-            HttpEntity resEntity = responsePost.getEntity();
-            String result = EntityUtils.toString(resEntity, "UTF-8");
-            Document doc = Jsoup.parse(result);
-            Element element = doc.select("section#content").get(0);
-            if (responsePost != null) {
-                callbackObject.result = element.toString();
-                Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
-                mHandler.sendMessage(msg);
+            @Override
+            protected void onPostExecute(Boolean aBoolean) {
+                super.onPostExecute(aBoolean);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    cookieManager.flush();
+                }
+                CookieSyncManager.getInstance().sync();
             }
-        } catch (IOException e) {
-//                e.printStackTrace();
-            callbackObject.exception = e;
-            Message msg = mHandler.obtainMessage(MESSAGE_FAILURE, callbackObject);
-            mHandler.sendMessage(msg);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        }.execute();
         return httpPost;
     }
+
+
 }

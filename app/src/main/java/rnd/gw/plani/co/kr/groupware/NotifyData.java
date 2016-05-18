@@ -7,4 +7,5 @@ public class NotifyData {
     String category;
     String title;
     String name;
+    String link;
 }

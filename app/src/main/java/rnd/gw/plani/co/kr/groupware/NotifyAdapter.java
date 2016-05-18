@@ -14,6 +14,24 @@ import java.util.List;
 public class NotifyAdapter extends RecyclerView.Adapter{
     List<NotifyData> items = new ArrayList<>();
 
+    public void add(NotifyData data){
+        items.add(data);
+        notifyDataSetChanged();
+    }
+    public void addAll(List<NotifyData> list){
+        items.addAll(list);
+        notifyDataSetChanged();
+    }
+    public void clear(){
+        items.clear();
+    }
+
+    public NotifyData getItemAtPosition(int position){
+        if(position< items.size()) {
+            return items.get(position);
+        }
+        return null;
+    }
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());

@@ -1,5 +1,6 @@
 package rnd.gw.plani.co.kr.groupware;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -24,7 +25,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
@@ -39,6 +39,7 @@ import com.balysv.materialmenu.MaterialMenuDrawable;
 import net.htmlparser.jericho.HTMLElementName;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -93,7 +94,7 @@ public class MainActivity extends AppCompatActivity
 
 
     boolean isUpdate = false;
-    CookieManager cookieManager;
+//    CookieManager cookieManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,8 +109,7 @@ public class MainActivity extends AppCompatActivity
             HOME_URL = "http://" + HOME_URL; //스플래시 화면으로부터 호스트주소 가져옴
         }
 
-        cookieManager = CookieManager.getInstance();
-        appId = PropertyManager.getInstance().getAppId();
+//        cookieManager = CookieManager.getInstance();
         String id = PropertyManager.getInstance().getUserId();
         String password = PropertyManager.getInstance().getPassword();
 
@@ -215,23 +215,48 @@ public class MainActivity extends AppCompatActivity
         appBarLayout.setVisibility(View.VISIBLE);
         fab.setVisibility(View.VISIBLE);
 
-        try {
-            if (new login().execute().get()) {
-                if (new updateDeviceId().execute().get()) { //사용자 등록이 제대로 완료되면
-                    PropertyManager.getInstance().setUser(true);
-                    //mWebView.loadUrl(HOME_URL);
-                    Toast.makeText(MainActivity.this, "update", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(MainActivity.this, "update fail", Toast.LENGTH_SHORT).show();
+
+        NetworkManager.getInstance().login(this, DO_LOGIN_URL, id, password, new NetworkManager.OnResultListener<Element>() {
+            @Override
+            public void onSuccess(HttpRequest request, Element result) {
+                try {
+                    appId = PropertyManager.getInstance().getAppId();
+                    if (new updateDeviceId().execute().get()) { //사용자 등록이 제대로 완료되면
+                        PropertyManager.getInstance().setUser(true);
+                        Toast.makeText(MainActivity.this, "update", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "update fail", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
                 }
-            } else {
-                Toast.makeText(MainActivity.this, "login fail", Toast.LENGTH_SHORT).show();
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
+
+            @Override
+            public void onFailure(HttpRequest request, int code, Throwable cause) {
+
+            }
+        });
+
+//        try {
+//            if (new login().execute().get()) {
+//                if (new updateDeviceId().execute().get()) { //사용자 등록이 제대로 완료되면
+//                    PropertyManager.getInstance().setUser(true);
+//                    //mWebView.loadUrl(HOME_URL);
+//                    Toast.makeText(MainActivity.this, "update", Toast.LENGTH_SHORT).show();
+//                } else {
+//                    Toast.makeText(MainActivity.this, "update fail", Toast.LENGTH_SHORT).show();
+//                }
+//            } else {
+//                Toast.makeText(MainActivity.this, "login fail", Toast.LENGTH_SHORT).show();
+//            }
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
+//        }
 //        new updateDeviceId().execute();
         //mWebView.loadUrl(HOME_URL);
         mWebView.setWebViewClient(new MyWebViewCient());
@@ -244,7 +269,7 @@ public class MainActivity extends AppCompatActivity
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             CookieSyncManager.createInstance(this);
         }
-        cookieManager.setAcceptCookie(true);
+//        cookieManager.setAcceptCookie(true);
     }
 
     @Override
@@ -365,7 +390,7 @@ public class MainActivity extends AppCompatActivity
                         }
 
                         String cookie = cookies.get(i).getName() + "=" + cookies.get(i).getValue();
-                        cookieManager.setCookie(cookies.get(i).getDomain(), cookie);
+//                        cookieManager.setCookie(cookies.get(i).getDomain(), cookie);
                     }
 //                    Thread.sleep(500);
                 }
@@ -411,8 +436,7 @@ public class MainActivity extends AppCompatActivity
     public void onMenuItemSelected(@MenuFragment.MenuMode int menuId) {//네비게이션 메뉴 선택시
         switch (menuId) {
             case MenuFragment.MENU_ID_MAIN:
-//                mWebView.loadUrl(MAIN_URL);
-                new getHtml().execute(MAIN_URL);
+//                new getHtml().execute(MAIN_URL);
                 isMenuSelect = true;
                 break;
             case MenuFragment.MENU_ID_CONTACT:
@@ -445,8 +469,17 @@ public class MainActivity extends AppCompatActivity
     private static final String SERVER_URL = "http://gw.plani.co.kr/app/android/index";
     private static final String METHOD2 = "UpdateDeviceID";
 
+
     class updateDeviceId extends AsyncTask<String, Integer, Boolean> { //사용자등록
         boolean isUpdate = false;
+        ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.setMessage("디바이스 등록중..");
+            progressDialog.show();
+        }
 
         @Override
         protected Boolean doInBackground(String... params) {
@@ -456,18 +489,19 @@ public class MainActivity extends AppCompatActivity
                 HashMap<String, Boolean> result = (HashMap<String, Boolean>) client.call(METHOD2, appId, deviceId, ANDROID);
                 if (!result.isEmpty()) {
                     isUpdate = result.get("result").booleanValue();
+                }else{
+                    return false;
                 }
             } catch (XMLRPCException e) {
                 e.printStackTrace();
             }
-
             return isUpdate;
         }
 
         @Override
         protected void onPostExecute(Boolean aBoolean) {
             super.onPostExecute(aBoolean);
-
+            progressDialog.dismiss();
         }
     }
 
@@ -498,11 +532,11 @@ public class MainActivity extends AppCompatActivity
                 new updateDeviceId().execute();
                 isUpdate = true;
             }
-            String cookie = cookieManager.getCookie(url);
+//            String cookie = cookieManager.getCookie(url);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                cookieManager.flush();
+//                cookieManager.flush();
             }
-            CookieSyncManager.getInstance().sync();
+//            CookieSyncManager.getInstance().sync();
 //            new getFormData().execute(url);
             //splashView.setVisibility(View.GONE);
         }
