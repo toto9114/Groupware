@@ -4,6 +4,7 @@
     <string name="title_activity_web">WebActivity</string>
     <string name="alert_title">알림</string>
     <string name="alert_finish">앱을 종료하시겠습니까?</string>
+    <string name="alert_web_finish">PC보기를 종료하시겠습니까?</string>
     <string name="alert_reply">새로운 댓글이 있습니다</string>
     <string name="alert_contact">새로운 업무연락이 있습니다</string>
     <string name="alert_note">새로운 쪽지가 도착했습니다</string>
@@ -30,11 +31,20 @@
 <meta name=twitter:url content="http://gw.plani.co.kr/">
 <meta name=twitter:image content="http://gw.plani.co.kr/images/common/logo_128x128.png">
 <meta name=twitter:description content="지식기반 IT서비스 기업 업무환경에 최적화된 유무선 통합 그룹웨어">
-<link rel=stylesheet href="_res/A.libs,,_bootstrap,,_css,,_bootstrap.min.css,,qv==20130306+css,,_theme.css+css,,_layout.css,,qv==20140731+css,,_main.css,Mcc.WHnLjjiT2e.css.pagespeed.cf.Ak15CogIbx.css">
-<link rel=stylesheet href="_res/A.css,,_iSmartCode.css,,qv==20150227+css,,_project.css,,qv==20140306+libs,,_snap,,_snap.css+font-awesome,,_css,,_font-awesome.min.css+libs,,_jquery,,_jquery-ui.css+libs,,_colorbox,,_colorbox.css+libs,,_datepicker,,_css,,_datepicker.css+libs,,_datetimepicker,,_css,,_bootstrap-datetimepicker.css+libs,,_fullcalendar,,_fullcalendar.css,Mcc.m9XKvXr68y.css.pagespeed.cf.yrDzJiItk3.css">
-<script src="_res/js/modernizr-2.6.2.min.js.pagespeed.jm.J9fY36u0se.js"></script>
+<link rel=stylesheet href="http://gw.plani.co.kr/_res/A.libs,,_bootstrap,,_css,,_bootstrap.min.css,,qv==20130306+css,,_theme.css+css,,_layout.css,,qv==20140731+css,,_main.css,Mcc.WHnLjjiT2e.css.pagespeed.cf.Ak15CogIbx.css">
+<link rel=stylesheet href="http://gw.plani.co.kr/_res/A.css,,_iSmartCode.css,,qv==20150227+css,,_project.css,,qv==20140306+libs,,_snap,,_snap.css+font-awesome,,_css,,_font-awesome.min.css+libs,,_jquery,,_jquery-ui.css+libs,,_colorbox,,_colorbox.css+libs,,_datepicker,,_css,,_datepicker.css+libs,,_datetimepicker,,_css,,_bootstrap-datetimepicker.css+libs,,_fullcalendar,,_fullcalendar.css,Mcc.m9XKvXr68y.css.pagespeed.cf.yrDzJiItk3.css">
+<script src="http://gw.plani.co.kr/_res/js/modernizr-2.6.2.min.js.pagespeed.jm.J9fY36u0se.js"></script>
         <!--[if lt IE 9]>
         <script src="//oss.maxcdn.com/libs/html5shiv/3.7.2/html5shiv.js"></script>
         <script src="//oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
         <![endif]--><link rel=dns-prefetch href="//ajax.googleapis.com"></head>]]></string>
+    <string name="html_btn_border"><![CDATA[<div class="mt20 pull-right">
+<div class="btn-group">
+<a href="#none" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">이 게시물을 <span class="caret"></span></a>
+<ul class="dropdown-menu">
+<li><a href="/events/bbs/schedule_add/p/reception/m/liaison/c/reception/pid/2866310" class="_popup" data-maxwidth="800">일정으로 등록</a></li>
+<li><a href="#none" class="highlight_mark" rel="2866310">중요 게시물 표시</a></li>
+</ul>
+</div>
+</div>]]></string>
 </resources>

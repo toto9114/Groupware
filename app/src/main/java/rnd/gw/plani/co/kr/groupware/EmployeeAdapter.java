@@ -10,15 +10,16 @@ import java.util.List;
 /**
  * Created by RND on 2016-05-16.
  */
-public class UndecideAdapter extends BaseAdapter {
-    List<UndecideData> items = new ArrayList<>();
+public class EmployeeAdapter extends BaseAdapter {
+    List<EmployeeData> items = new ArrayList<>();
 
-    public void add(UndecideData data){
+    public void add(EmployeeData data){
         items.add(data);
+        notifyDataSetChanged();
     }
 
-    public void refresh(){
-        notifyDataSetChanged();
+    public void clear(){
+        items.clear();
     }
     @Override
     public int getCount() {
@@ -37,13 +38,13 @@ public class UndecideAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        UndecideView view;
+        EmployeeView view;
         if (convertView == null) {
-            view = new UndecideView(parent.getContext());
+            view = new EmployeeView(parent.getContext());
         } else {
-            view = (UndecideView)convertView;
+            view = (EmployeeView)convertView;
         }
-
+        view.setCustomer(items.get(position));
         return view;
     }
 }

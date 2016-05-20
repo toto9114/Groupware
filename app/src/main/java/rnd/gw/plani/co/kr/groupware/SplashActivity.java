@@ -26,6 +26,7 @@ import org.xmlrpc.android.XMLRPCClient;
 import org.xmlrpc.android.XMLRPCException;
 
 import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
 
 import rnd.gw.plani.co.kr.groupware.GCM.PropertyManager;
 import rnd.gw.plani.co.kr.groupware.GCM.RegistrationIntentService;
@@ -36,7 +37,7 @@ public class SplashActivity extends AppCompatActivity {
     private BroadcastReceiver mRegistrationBroadcastReceiver;
 
     EditText editDomain;
-    Button domainView;
+    Button domainView, regBtn;
     private static final String SERVER_URL = "http://gw.plani.co.kr/app/android/index";
     private static final String METHOD1 = "CheckHosting";
 
@@ -47,31 +48,46 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
+        isUser = PropertyManager.getInstance().isUser();
+
         editDomain = (EditText) findViewById(R.id.edit_domain);
         domainView = (Button) findViewById(R.id.btn_domain);
+        regBtn = (Button) findViewById(R.id.btn_regist);
+
+        if(!TextUtils.isEmpty(PropertyManager.getInstance().getDomain())){
+            domainView.setVisibility(View.VISIBLE);
+        }
         ConnectivityManager manager =
                 (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = manager.getActiveNetworkInfo();
         if (activeNetwork != null) { // connected to the internet
-            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
-                // connected to wifi
-                Toast.makeText(this, activeNetwork.getTypeName()+"에 연결되었습니다", Toast.LENGTH_SHORT).show();
-            } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
-                // connected to the mobile provider's data plan
-                Toast.makeText(this, activeNetwork.getTypeName()+"에 연결되었습니다", Toast.LENGTH_SHORT).show();
-            }
+//            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
+//                // connected to wifi
+//                Toast.makeText(this, activeNetwork.getTypeName()+"에 연결되었습니다", Toast.LENGTH_SHORT).show();
+//            } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+//                // connected to the mobile provider's data plan
+//                Toast.makeText(this, activeNetwork.getTypeName()+"에 연결되었습니다", Toast.LENGTH_SHORT).show();
+//            }
         } else {
             // not connected to the internet
             Toast.makeText(SplashActivity.this, "인터넷에 연결되지 않았습니다. 연결 상태를 확인해주세요", Toast.LENGTH_SHORT).show();
             finish();
         }
 
-        Button btn = (Button) findViewById(R.id.btn_regist);
-        btn.setOnClickListener(new View.OnClickListener() {
+
+        regBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 domain = editDomain.getText().toString();
-                new checkHosting().execute(domain);
+                try {
+                    if(new checkHosting().execute(domain).get()){
+                        domainView.setVisibility(View.VISIBLE);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
                 editDomain.setText("");
             }
         });
@@ -94,8 +110,6 @@ public class SplashActivity extends AppCompatActivity {
         };
         setUpIfNeeded();
     }
-
-    private static final String LOGIN_URL = "http://gw.plani.co.kr/login/accounts/do_login/redirect/eNortjK0UtJXsgZcMAkSAcc.";
 
     LoginDialog dialog;
     MyProgressDialog progressDialog;
@@ -188,8 +202,6 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             protected Boolean doInBackground(Void... params) {
                 String registrationToken = PropertyManager.getInstance().getRegistrationToken();
-
-                isUser = PropertyManager.getInstance().isUser();
 
                 if (isUser) {
                     startActivity(new Intent(SplashActivity.this, MainActivity.class));

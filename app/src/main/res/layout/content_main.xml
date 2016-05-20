@@ -20,28 +20,7 @@
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/appbar">
-
-        <rnd.gw.plani.co.kr.groupware.MyWebView
-            android:id="@+id/webView"
-            android:layout_width="match_parent"
-            android:layout_height="512dp"
-            android:layout_gravity="center_horizontal|bottom"
-            android:layout_alignParentBottom="true"
-            android:layout_below="@+id/appbar"
-            android:visibility="gone" />
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/fab_margin"
-            android:src="@android:drawable/ic_dialog_email"
-            android:visibility="gone"
-            app:backgroundTint="@color/toolBar" />
-
-    </FrameLayout>
+        android:layout_below="@+id/appbar"></FrameLayout>
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar"
