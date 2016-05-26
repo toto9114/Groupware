@@ -4,5 +4,6 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="divider_size">1dp</dimen>
-    <dimen name="divider_horizontal_margin">10dp</dimen>
+    <dimen name="divider_left_margin">45dp</dimen>
+    <dimen name="divider_right_margin">0dp</dimen>
 </resources>

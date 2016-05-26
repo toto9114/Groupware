@@ -1,10 +1,13 @@
 package rnd.gw.plani.co.kr.groupware;
 
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
@@ -41,12 +44,12 @@ public class NotifyFragment extends Fragment {
 
     NotifyAdapter mAdapter;
     FamiliarRecyclerView recyclerView;
-    WebDialog webDialog;
     LinearLayoutManager layoutManager;
+    SwipeRefreshLayout refreshLayout;
     private static String HOME_URL = "";
 
     boolean isLast = false;
-    int page = 1;
+    int page = 1; //페이징 처리하기 위함
     int firstVisibleItem, visibleItemCount, totalItemCount;
 
     @Override
@@ -54,8 +57,9 @@ public class NotifyFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_notify, container, false);
-        HOME_URL = "http://" + PropertyManager.getInstance().getDomain() + "/";
+        HOME_URL = "http://" + PropertyManager.getInstance().getDomain();
 
+        refreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.refresh);
         recyclerView = (FamiliarRecyclerView) view.findViewById(R.id.recycler);
         mAdapter = new NotifyAdapter();
 
@@ -63,28 +67,14 @@ public class NotifyFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
 
         recyclerView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(getContext())
-                .color(Color.DKGRAY)
-                .marginResId(R.dimen.divider_horizontal_margin)
+                .color(Color.LTGRAY)
+                .marginResId(R.dimen.divider_left_margin, R.dimen.divider_right_margin)
                 .sizeResId(R.dimen.divider_size)
                 .build());
 
         recyclerView.setAdapter(mAdapter);
 
-
-        webDialog = new WebDialog();
-
-
-        NetworkManager.getInstance().getAllNotify(getContext(), FEED_URL + page, new NetworkManager.OnResultListener<Element>() {
-            @Override
-            public void onSuccess(HttpRequest request, Element result) {
-                parseToList(result);
-            }
-
-            @Override
-            public void onFailure(HttpRequest request, int code, Throwable cause) {
-
-            }
-        });
+        initData();
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
@@ -113,41 +103,96 @@ public class NotifyFragment extends Fragment {
             @Override
             public void onItemClick(FamiliarRecyclerView familiarRecyclerView, View view, int position) {
                 NotifyData data = mAdapter.getItemAtPosition(position);
-                if (data.category.contains("일정")) {
-                    Toast.makeText(getContext(), "지원하지않는 페이지입니다", Toast.LENGTH_SHORT).show();
-                } else {
-//                    Bundle args = new Bundle();
-//                    args.putString(WebDialog.EXTRA_URL, data.link);
-//                    webDialog.setArguments(args);
-//                    webDialog.show(getActivity().getSupportFragmentManager(), "webDialog");
-                    Intent i = new Intent(getContext(),WebViewActivity.class);
-                    i.putExtra(WebViewActivity.EXTRA_URL,data.link);
+                if (data.category.equals("업무연락") || data.category.equals("댓글알림")
+                        || data.category.equals("쪽지") || data.category.contains("커뮤니티")) {
+                    Intent i = new Intent(getContext(), WebViewActivity.class);
+                    i.putExtra(WebViewActivity.EXTRA_URL, data.link);
+                    i.putExtra(WebViewActivity.EXTRA_CATEGORY, data.category);
                     startActivity(i);
+                } else {
+                    Toast.makeText(getContext(), "지원하지않는 페이지입니다", Toast.LENGTH_SHORT).show();
                 }
                 Log.i("Notify", data.link);
+            }
+        });
+
+        refreshLayout.setColorSchemeColors(ContextCompat.getColor(getContext(), R.color.splash));
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+
+                NetworkManager.getInstance().getAllNotify(getContext(), FEED_URL + 1, new NetworkManager.OnResultListener<NewsFeedResult>() {
+                    @Override
+                    public void onSuccess(HttpRequest request, NewsFeedResult result) {
+                        mAdapter.clear();
+                        parseToList(result.element);
+                        refreshLayout.setRefreshing(false);
+                    }
+
+                    @Override
+                    public void onFailure(HttpRequest request, int code, Throwable cause) {
+                        refreshLayout.setRefreshing(false);
+                    }
+                });
             }
         });
         return view;
     }
 
-    MyProgressDialog dialog;
-    private void getMoreItem() {
-        page++;
-        dialog = new MyProgressDialog();
-        dialog.show(getActivity().getSupportFragmentManager(),"dialog");
-        NetworkManager.getInstance().getAllNotify(getContext(), FEED_URL + page, new NetworkManager.OnResultListener<Element>() {
+    ProgressDialog dialog = null;
+    int lastPage;
+
+    private void initData() {
+
+        NetworkManager.getInstance().getAllNotify(getContext(), FEED_URL + page, new NetworkManager.OnResultListener<NewsFeedResult>() {
             @Override
-            public void onSuccess(HttpRequest request, Element result) {
-                parseToList(result);
+            public void onSuccess(HttpRequest request, NewsFeedResult result) {
+                parseToList(result.element);
+                lastPage = result.page;
                 dialog.dismiss();
             }
 
             @Override
             public void onFailure(HttpRequest request, int code, Throwable cause) {
-               dialog.dismiss();
+                dialog.dismiss();
             }
         });
+        dialog = new ProgressDialog(getContext());
+        dialog.setTitle("");
+        dialog.setMessage("loading...");
+        dialog.setCancelable(false);
+        dialog.show();
+    }
 
+    boolean isMoreData = false;
+
+    private void getMoreItem() {
+
+        if (page >= lastPage) {
+            return;
+        } else {
+            page++;
+        }
+
+        NetworkManager.getInstance().getAllNotify(getContext(), FEED_URL + page, new NetworkManager.OnResultListener<NewsFeedResult>() {
+            @Override
+            public void onSuccess(HttpRequest request, NewsFeedResult result) {
+                parseToList(result.element);
+                isMoreData = false;
+                dialog.dismiss();
+            }
+
+            @Override
+            public void onFailure(HttpRequest request, int code, Throwable cause) {
+                isMoreData = false;
+                dialog.dismiss();
+            }
+        });
+        dialog = new ProgressDialog(getContext());
+        dialog.setTitle("");
+        dialog.setMessage("loading...");
+        dialog.setCancelable(false);
+        dialog.show();
     }
 
     private void parseToList(Element liList) {
@@ -161,5 +206,4 @@ public class NotifyFragment extends Fragment {
             mAdapter.add(data);
         }
     }
-
 }

@@ -34,7 +34,7 @@ public class PropertyManager {
         return mPrefs.getBoolean(REG_USER, false);
     }
 
-    private static final String REG_DOMAIN = "domain";
+    private static final String REG_DOMAIN = "domain"; //도메인주소 관리
 
     public void setDomain(String domain) {
         mEditor.putString(REG_DOMAIN, domain);
@@ -45,7 +45,7 @@ public class PropertyManager {
         return mPrefs.getString(REG_DOMAIN, "");
     }
 
-    private static final String REG_TOKEN = "regToken";
+    private static final String REG_TOKEN = "regToken";  //registration token 정보 관리
 
     public void setRegistrationToken(String regId) {
         mEditor.putString(REG_TOKEN, regId);
@@ -67,7 +67,7 @@ public class PropertyManager {
         mEditor.commit();
     }
 
-    private static final String BADGE_COUNT = "badge";
+    private static final String BADGE_COUNT = "badge"; //뱃지카운트 관리
 
     public void setBadgeCount(int count) {
         mEditor.putInt(BADGE_COUNT, count);
@@ -78,7 +78,7 @@ public class PropertyManager {
         return mPrefs.getInt(BADGE_COUNT, 0);
     }
 
-    private static final String REG_ID = "userid";
+    private static final String REG_ID = "userid";  //유저아이디 관리
 
     public void setUserId(String id) {
         mEditor.putString(REG_ID, id);
@@ -89,7 +89,7 @@ public class PropertyManager {
         return mPrefs.getString(REG_ID, "");
     }
 
-    private static final String REG_PW = "password";
+    private static final String REG_PW = "password"; //패스워드 관리
 
     public void setPassword(String password) {
         mEditor.putString(REG_PW, password);
@@ -100,14 +100,15 @@ public class PropertyManager {
         return mPrefs.getString(REG_PW, "");
     }
 
-    private static final String REG_APP_ID = "app_id";
+    private static final String REG_APP_ID = "app_id"; //쿠키에서 추출한 appId 관리
 
     public void setAppId(String appId) {
         mEditor.putString(REG_APP_ID, appId);
         mEditor.commit();
     }
-
     public String getAppId() {
         return mPrefs.getString(REG_APP_ID, "");
     }
+
+
 }

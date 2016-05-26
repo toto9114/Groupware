@@ -6,8 +6,12 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.CookieManager;
+import android.widget.Toast;
+
+import net.htmlparser.jericho.HTMLElementName;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
@@ -55,9 +59,7 @@ public class NetworkManager {
         HttpParams param = httpClient.getParams();
         HttpConnectionParams.setConnectionTimeout(param, 5000);
         HttpConnectionParams.setSoTimeout(param, 5000);
-//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-//            CookieSyncManager.createInstance(MyApplication.getContext());
-//        }
+
         cookieManager = CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
     }
@@ -103,9 +105,8 @@ public class NetworkManager {
     }
 
 
-
-    public HttpGet getAllNotify(Context context, String url, final OnResultListener<Element> listener){
-        final CallbackObject<Element> callbackObject = new CallbackObject<>();
+    public HttpGet getAllNotify(Context context, String url, final OnResultListener<NewsFeedResult> listener) { //뉴스피드 정보 갖고오기
+        final CallbackObject<NewsFeedResult> callbackObject = new CallbackObject<>();
         final HttpGet request = new HttpGet(url);
         new AsyncTask<String, Integer, Boolean>() {
             @Override
@@ -119,9 +120,13 @@ public class NetworkManager {
                     String result = EntityUtils.toString(entity, "UTF-8");
                     Document doc = Jsoup.parse(result);
                     Element element = doc.select("div.gw_feed.feeds_page").get(0);
+                    List<Element> list = doc.select("div.centered").get(0).getElementsByTag(HTMLElementName.LI);
+                    NewsFeedResult data = new NewsFeedResult();
+                    data.element = element;
+                    data.page = list.size() - 1;
 
                     if (response != null) {
-                        callbackObject.result = element;
+                        callbackObject.result = data;
                         Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
                         mHandler.sendMessage(msg);
                     }
@@ -143,7 +148,8 @@ public class NetworkManager {
         }.execute();
         return request;
     }
-    public HttpGet getCustomer(Context context, String url, final OnResultListener<Element> listener){
+
+    public HttpGet getNote(Context context, String url, final OnResultListener<Element> listener) { //고객정보 갖고오기
         final CallbackObject<Element> callbackObject = new CallbackObject<>();
         final HttpGet request = new HttpGet(url);
         new AsyncTask<String, Integer, Boolean>() {
@@ -157,7 +163,7 @@ public class NetworkManager {
                     HttpEntity entity = response.getEntity();
                     String result = EntityUtils.toString(entity, "UTF-8");
                     Document doc = Jsoup.parse(result);
-                    Element element = doc.select("table.bbs_table.table-hover").get(0);
+                    Element element = doc.select("table.bbs_table").get(0);
                     if (response != null) {
                         callbackObject.result = element;
                         Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
@@ -182,10 +188,14 @@ public class NetworkManager {
         return request;
     }
 
-    public HttpGet getContactSection(Context context, String url, final OnResultListener<Element> listener){
-        final CallbackObject<Element> callbackObject = new CallbackObject<>();
+    public HttpGet getContactSection(Context context, final String url, final OnResultListener<ContentData> listener) { //업무연락 상세보기 페이지 갖고오기
+        final CallbackObject<ContentData> callbackObject = new CallbackObject<>();
         final HttpGet request = new HttpGet(url);
+        final MyRedirectHandler handler = new MyRedirectHandler();
+        httpClient.setRedirectHandler(handler);
         new AsyncTask<String, Integer, Boolean>() {
+            ContentData data = new ContentData();
+
             @Override
             protected Boolean doInBackground(String... params) {
                 try {
@@ -193,12 +203,19 @@ public class NetworkManager {
                     callbackObject.listener = listener;
                     HttpResponse response = null;
                     response = httpClient.execute(request);
+                    String lastUrl = url;
+                    if (handler.lastRedirectedUri != null) {
+                        lastUrl = handler.lastRedirectedUri.toString();
+                        String id = lastUrl.replace("http://" + PropertyManager.getInstance().getDomain() + "/reception/reception/view/tableid/liaison/id/", "");
+                        data.tableId = id;
+                    }
                     HttpEntity entity = response.getEntity();
                     String result = EntityUtils.toString(entity, "UTF-8");
                     Document doc = Jsoup.parse(result);
                     Element element = doc.select("section#content").get(0);
+                    data.element = element;
                     if (response != null) {
-                        callbackObject.result = element;
+                        callbackObject.result = data;
                         Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
                         mHandler.sendMessage(msg);
                     }
@@ -221,17 +238,21 @@ public class NetworkManager {
         return request;
     }
 
-
-    private static final String DO_LOGIN_URL = "http://gw.plani.co.kr/login/accounts/do_login/redirect/eNortjK0UtJXsgZcMAkSAcc.";
-
-    public HttpPost login(Context context, String url , String id, String password, final OnResultListener<Element> listener) {
+    public HttpPost login(Context context, String url, String id, String password, final OnResultListener<Element> listener) { //로그인
+        httpClient.getCookieStore().clear();
         final CallbackObject<Element> callbackObject = new CallbackObject<>();
         final ArrayList<NameValuePair> nameValuePairs =
                 new ArrayList<NameValuePair>();
         nameValuePairs.add(new BasicNameValuePair("userid", id));
         nameValuePairs.add(new BasicNameValuePair("passwd", password));
-        final HttpPost httpPost = new HttpPost(url+"/login/accounts/do_login/redirect/eNortjK0UtJXsgZcMAkSAcc.");
+        final HttpPost httpPost = new HttpPost(url + "/login/accounts/do_login/redirect/eNortjK0UtJXsgZcMAkSAcc.");
         new AsyncTask<String, Integer, Boolean>() {
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+
             @Override
             protected Boolean doInBackground(String... params) {
                 try {
@@ -252,36 +273,43 @@ public class NetworkManager {
                             if (cookies.get(i).getName().equals("app_id")) {
                                 PropertyManager.getInstance().setAppId(cookies.get(i).getValue());
                             }
-
                             String cookie = cookies.get(i).getName() + "=" + cookies.get(i).getValue();
                             cookieManager.setCookie(cookies.get(i).getDomain(), cookie);
                         }
-                        Thread.sleep(500);
-                    }
 
-                    HttpEntity resEntity = responsePost.getEntity();
-                    String result = EntityUtils.toString(resEntity, "UTF-8");
-                    Document doc = Jsoup.parse(result);
-                    Element element = doc.select("section#content").get(0);
-                    if (responsePost != null) {
-                        callbackObject.result = element;
-                        Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
-                        mHandler.sendMessage(msg);
+                        if (TextUtils.isEmpty(PropertyManager.getInstance().getAppId())) {
+                            return false;
+                        } else {
+                            HttpEntity resEntity = responsePost.getEntity();
+                            String result = EntityUtils.toString(resEntity, "UTF-8");
+                            Document doc = Jsoup.parse(result);
+                            Element element = doc.select("section#content").get(0);
+                            if (responsePost != null) {
+                                callbackObject.result = element;
+                                Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
+                                mHandler.sendMessage(msg);
+                            }
+                        }
                     }
                 } catch (IOException e) {
-//                e.printStackTrace();
+//                    e.printStackTrace();
                     callbackObject.exception = e;
                     Message msg = mHandler.obtainMessage(MESSAGE_FAILURE, callbackObject);
                     mHandler.sendMessage(msg);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
-                return null;
+                return true;
             }
 
             @Override
             protected void onPostExecute(Boolean aBoolean) {
                 super.onPostExecute(aBoolean);
+
+                if (!aBoolean) {
+                    Toast.makeText(MyApplication.getContext(), "로그인 정보가 유효하지 않습니다", Toast.LENGTH_SHORT).show();
+                    callbackObject.result = null;
+                    Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
+                    mHandler.sendMessage(msg);
+                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     cookieManager.flush();
                 }
@@ -289,30 +317,37 @@ public class NetworkManager {
         }.execute();
         return httpPost;
     }
-    public HttpPost sendReply(Context context, String url , String reply, final OnResultListener<Boolean> listener) {
+
+    public HttpPost sendReply(Context context, final String url, String pid, String reply, final OnResultListener<Boolean> listener) { //댓글달기
         final CallbackObject<Boolean> callbackObject = new CallbackObject<>();
+        final MyRedirectHandler handler = new MyRedirectHandler();
+        httpClient.setRedirectHandler(handler);
         final ArrayList<NameValuePair> nameValuePairs =
                 new ArrayList<NameValuePair>();
+
         nameValuePairs.add(new BasicNameValuePair("contents", reply));
-        final HttpPost httpPost = new HttpPost(url+"/reception/reception/comment_save/tableid/liaison/id/2859882");
+        nameValuePairs.add(new BasicNameValuePair("pid", pid));
+        nameValuePairs.add(new BasicNameValuePair("redirect", "eNortjK0UtJXsgZcMAkSAcc."));
+        final HttpPost httpPost = new HttpPost(url);
         new AsyncTask<String, Integer, Boolean>() {
             @Override
             protected Boolean doInBackground(String... params) {
                 try {
-
                     callbackObject.request = httpPost;
                     callbackObject.listener = listener;
                     UrlEncodedFormEntity entityRequest =
                             new UrlEncodedFormEntity(nameValuePairs, "UTF-8");
 
                     httpPost.setEntity(entityRequest);
-
                     HttpResponse responsePost = httpClient.execute(httpPost);
-
+                    String lastUrl = url;
+                    if (handler.lastRedirectedUri != null) {
+                        lastUrl = handler.lastRedirectedUri.toString();
+                    }
                     if (responsePost != null) {
-                        if(responsePost.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
+                        if (responsePost.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
                             callbackObject.result = true;
-                        }else{
+                        } else {
                             callbackObject.result = false;
                         }
                         Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);

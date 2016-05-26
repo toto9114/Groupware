@@ -11,8 +11,8 @@
     android:paddingRight="10dp">
 
     <ImageView
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:id="@+id/image_icon"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
@@ -32,25 +32,19 @@
             android:text="New Text"
             android:id="@+id/text_category"
             android:textStyle="bold" />
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#dddddd"
-            android:layout_marginRight="16dp" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="New Text"
-            android:id="@+id/text_title" />
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#dddddd"
-            android:layout_marginRight="16dp" />
+            android:id="@+id/text_title"
+            android:layout_marginTop="3dp" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginTop="3dp">
             <ImageView
                 android:layout_width="15dp"
                 android:layout_height="15dp"
@@ -61,7 +55,16 @@
                 android:layout_height="wrap_content"
                 android:text="New Text"
                 android:id="@+id/text_name"
-                android:layout_marginLeft="5dp" />
+                android:layout_marginLeft="5dp"
+                android:textSize="10sp"
+                android:layout_gravity="center_vertical" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/text_time"
+                android:layout_marginLeft="6dp"
+                android:textSize="10sp" />
         </LinearLayout>
 
     </LinearLayout>

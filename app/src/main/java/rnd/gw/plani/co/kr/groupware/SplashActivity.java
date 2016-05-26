@@ -7,26 +7,22 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
+import android.view.WindowManager;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
-import org.xmlrpc.android.XMLRPCClient;
-import org.xmlrpc.android.XMLRPCException;
-
-import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
+import org.apache.http.HttpRequest;
+import org.jsoup.nodes.Element;
 
 import rnd.gw.plani.co.kr.groupware.GCM.PropertyManager;
 import rnd.gw.plani.co.kr.groupware.GCM.RegistrationIntentService;
@@ -36,13 +32,7 @@ public class SplashActivity extends AppCompatActivity {
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private BroadcastReceiver mRegistrationBroadcastReceiver;
 
-    EditText editDomain;
-    Button domainView, regBtn;
-    private static final String SERVER_URL = "http://gw.plani.co.kr/app/android/index";
-    private static final String METHOD1 = "CheckHosting";
-
     boolean isUser;
-    private String domain = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,58 +40,10 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
         isUser = PropertyManager.getInstance().isUser();
 
-        editDomain = (EditText) findViewById(R.id.edit_domain);
-        domainView = (Button) findViewById(R.id.btn_domain);
-        regBtn = (Button) findViewById(R.id.btn_regist);
-
-        if(!TextUtils.isEmpty(PropertyManager.getInstance().getDomain())){
-            domainView.setVisibility(View.VISIBLE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.splash));
         }
-        ConnectivityManager manager =
-                (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = manager.getActiveNetworkInfo();
-        if (activeNetwork != null) { // connected to the internet
-//            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
-//                // connected to wifi
-//                Toast.makeText(this, activeNetwork.getTypeName()+"에 연결되었습니다", Toast.LENGTH_SHORT).show();
-//            } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
-//                // connected to the mobile provider's data plan
-//                Toast.makeText(this, activeNetwork.getTypeName()+"에 연결되었습니다", Toast.LENGTH_SHORT).show();
-//            }
-        } else {
-            // not connected to the internet
-            Toast.makeText(SplashActivity.this, "인터넷에 연결되지 않았습니다. 연결 상태를 확인해주세요", Toast.LENGTH_SHORT).show();
-            finish();
-        }
-
-
-        regBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                domain = editDomain.getText().toString();
-                try {
-                    if(new checkHosting().execute(domain).get()){
-                        domainView.setVisibility(View.VISIBLE);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                }
-                editDomain.setText("");
-            }
-        });
-
-        if (!TextUtils.isEmpty(PropertyManager.getInstance().getDomain())) {
-            domainView.setText(PropertyManager.getInstance().getDomain());
-        }
-
-        domainView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new checkHosting().execute(domainView.getText().toString());
-            }
-        });
         mRegistrationBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -109,57 +51,6 @@ public class SplashActivity extends AppCompatActivity {
             }
         };
         setUpIfNeeded();
-    }
-
-    LoginDialog dialog;
-    MyProgressDialog progressDialog;
-    class checkHosting extends AsyncTask<String, Integer, Boolean> {
-        boolean isConn = false;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            progressDialog = new MyProgressDialog();
-            progressDialog.setCancelable(false);
-            progressDialog.show(getSupportFragmentManager(),"progress");
-        }
-
-        @Override
-        protected Boolean doInBackground(String... params) {
-            XMLRPCClient client = new XMLRPCClient(SERVER_URL);
-            try {
-                if (params[0].contains("http://")) {
-                    StringBuilder sb = new StringBuilder(params[0]);
-                    params[0] = sb.substring(7);
-                }
-                HashMap<String, Boolean> result = (HashMap<String, Boolean>) client.call(METHOD1, params[0]);
-                if (!result.isEmpty()) {
-                    isConn = result.get("result").booleanValue();
-                }
-            } catch (XMLRPCException e) {
-                e.printStackTrace();
-            }
-            return isConn;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-            progressDialog.dismiss();
-            if (isConn) {
-                if (!TextUtils.isEmpty(domain)) {
-                    domainView.setText(domain);
-                }
-                PropertyManager.getInstance().setDomain(domainView.getText().toString());
-                Toast.makeText(SplashActivity.this, "도메인이 성공적으로 등록되었습니다.", Toast.LENGTH_SHORT).show();
-                dialog = new LoginDialog();
-                dialog.setCancelable(false);
-                dialog.show(getSupportFragmentManager(), "dialog");
-                //로그인 다이얼로그 띄우고
-            } else {
-                Toast.makeText(SplashActivity.this, "잘못된 도메인입니다.", Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 
     @Override
@@ -197,6 +88,8 @@ public class SplashActivity extends AppCompatActivity {
         return true;
     }
 
+    Handler mHandler = new Handler(Looper.getMainLooper());
+
     private void doRealStart() {
         new AsyncTask<Void, Void, Boolean>() {
             @Override
@@ -204,8 +97,43 @@ public class SplashActivity extends AppCompatActivity {
                 String registrationToken = PropertyManager.getInstance().getRegistrationToken();
 
                 if (isUser) {
-                    startActivity(new Intent(SplashActivity.this, MainActivity.class));
-                    finish();
+                    String id = PropertyManager.getInstance().getUserId();
+                    String pw = PropertyManager.getInstance().getPassword();
+                    String domain = PropertyManager.getInstance().getDomain();
+                    if (!domain.contains("http://")) {
+                        domain = "http://" + domain; //저장된 호스트주소 가져옴 ex)http://gw.plani.co.kr
+                    }
+                    NetworkManager.getInstance().login(SplashActivity.this, domain, id, pw, new NetworkManager.OnResultListener<Element>() {
+                        @Override
+                        public void onSuccess(HttpRequest request, Element result) {
+                            startActivity(new Intent(SplashActivity.this, MainActivity.class));
+                            finish();
+                        }
+
+                        @Override
+                        public void onFailure(HttpRequest request, int code, Throwable cause) {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(SplashActivity.this);
+                            builder.setTitle(R.string.alert_title)
+                                    .setMessage("네트워크에 연결 상태를 확인해주세요")
+                                    .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            finish();
+                                        }
+                                    })
+                            .show();
+                        }
+                    });
+
+                } else {
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            startActivity(new Intent(SplashActivity.this, RegistActivity.class));
+                            finish();
+                        }
+                    }, 1500);
+
                 }
                 return null;
             }

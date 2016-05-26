@@ -27,10 +27,9 @@ import com.google.android.gms.iid.InstanceID;
 
 import java.io.IOException;
 
-import rnd.gw.plani.co.kr.groupware.R;
-
 public class RegistrationIntentService extends IntentService {
 
+    private static final String SENDER_ID = "492228514087";
     private static final String TAG = "RegIntentService";
     private static final String[] TOPICS = {"global"};
 
@@ -45,7 +44,7 @@ public class RegistrationIntentService extends IntentService {
 
         try {
             InstanceID instanceID = InstanceID.getInstance(this);
-            String token = instanceID.getToken(getString(R.string.gcm_defaultSenderId),
+            String token = instanceID.getToken(SENDER_ID,
                     GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
             PropertyManager.getInstance().setRegistrationToken(token);
             // Subscribe to topic channels

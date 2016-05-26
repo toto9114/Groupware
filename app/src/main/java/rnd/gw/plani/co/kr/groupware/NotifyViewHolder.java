@@ -10,7 +10,7 @@ import android.widget.TextView;
  */
 public class NotifyViewHolder extends RecyclerView.ViewHolder {
 
-    TextView categoryView, titleView, nameView;
+    TextView categoryView, titleView, nameView, timeView;
     ImageView iconView;
 
     public NotifyViewHolder(View itemView) {
@@ -19,6 +19,7 @@ public class NotifyViewHolder extends RecyclerView.ViewHolder {
         titleView = (TextView) itemView.findViewById(R.id.text_title);
         nameView = (TextView) itemView.findViewById(R.id.text_name);
         iconView = (ImageView) itemView.findViewById(R.id.image_icon);
+        timeView = (TextView) itemView.findViewById(R.id.text_time);
     }
 
     NotifyData data;
@@ -30,18 +31,19 @@ public class NotifyViewHolder extends RecyclerView.ViewHolder {
 
         switch (data.category) {
             case "업무연락":
-                iconView.setImageResource(R.drawable.ic_send);
+                iconView.setImageResource(R.drawable.ic_email_black_48dp);
                 break;
             case "댓글알림":
-                iconView.setImageResource(R.drawable.ic_reply);
+                iconView.setImageResource(R.drawable.ic_comment_black_48dp);
                 break;
             case "쪽지":
-                iconView.setImageResource(R.drawable.ic_note);
+                iconView.setImageResource(R.drawable.ic_textsms_black_48dp);
                 break;
             default:
                 iconView.setImageResource(R.drawable.ic_info_black_48dp);
                 break;
         }
         nameView.setText(data.name);
+//        timeView.setText(data.time);
     }
 }
