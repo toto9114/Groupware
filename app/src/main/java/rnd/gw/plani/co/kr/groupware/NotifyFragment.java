@@ -40,7 +40,7 @@ public class NotifyFragment extends Fragment {
         // Required empty public constructor
     }
 
-    private String FEED_URL = "http://gw.plani.co.kr/feeds/feed/index/page/";
+    private String FEED_URL = "/feeds/feed/index/page/";
 
     NotifyAdapter mAdapter;
     FamiliarRecyclerView recyclerView;
@@ -58,7 +58,7 @@ public class NotifyFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_notify, container, false);
         HOME_URL = "http://" + PropertyManager.getInstance().getDomain();
-
+        FEED_URL = HOME_URL + FEED_URL;
         refreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.refresh);
         recyclerView = (FamiliarRecyclerView) view.findViewById(R.id.recycler);
         mAdapter = new NotifyAdapter();
@@ -120,10 +120,10 @@ public class NotifyFragment extends Fragment {
         refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-
                 NetworkManager.getInstance().getAllNotify(getContext(), FEED_URL + 1, new NetworkManager.OnResultListener<NewsFeedResult>() {
                     @Override
                     public void onSuccess(HttpRequest request, NewsFeedResult result) {
+                        page = 1;
                         mAdapter.clear();
                         parseToList(result.element);
                         refreshLayout.setRefreshing(false);
@@ -164,35 +164,36 @@ public class NotifyFragment extends Fragment {
         dialog.show();
     }
 
-    boolean isMoreData = false;
+    boolean isLoading = false;
 
     private void getMoreItem() {
+        if (!isLoading) {
+            if (page >= lastPage) {
+                return;
+            } else {
+                page++;
+            }
+            isLoading = true;
+            NetworkManager.getInstance().getAllNotify(getContext(), FEED_URL + page, new NetworkManager.OnResultListener<NewsFeedResult>() {
+                @Override
+                public void onSuccess(HttpRequest request, NewsFeedResult result) {
+                    parseToList(result.element);
+                    isLoading = false;
+                    dialog.dismiss();
+                }
 
-        if (page >= lastPage) {
-            return;
-        } else {
-            page++;
+                @Override
+                public void onFailure(HttpRequest request, int code, Throwable cause) {
+                    isLoading = false;
+                    dialog.dismiss();
+                }
+            });
+            dialog = new ProgressDialog(getContext());
+            dialog.setTitle("");
+            dialog.setMessage("loading...");
+            dialog.setCancelable(false);
+            dialog.show();
         }
-
-        NetworkManager.getInstance().getAllNotify(getContext(), FEED_URL + page, new NetworkManager.OnResultListener<NewsFeedResult>() {
-            @Override
-            public void onSuccess(HttpRequest request, NewsFeedResult result) {
-                parseToList(result.element);
-                isMoreData = false;
-                dialog.dismiss();
-            }
-
-            @Override
-            public void onFailure(HttpRequest request, int code, Throwable cause) {
-                isMoreData = false;
-                dialog.dismiss();
-            }
-        });
-        dialog = new ProgressDialog(getContext());
-        dialog.setTitle("");
-        dialog.setMessage("loading...");
-        dialog.setCancelable(false);
-        dialog.show();
     }
 
     private void parseToList(Element liList) {

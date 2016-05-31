@@ -2,9 +2,14 @@
 <resources>
     <color name="colorPrimary">#009DD6</color>
     <color name="colorPrimaryDark">#009DD6</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorAccent">#009DD6</color>
     <color name="toolBar">#009DD6</color>
-    <color name="navigation_title">#009DD6</color>
+    <color name="navigation_title">#0E162F</color>
     <color name="divider">#EEEEEE</color>
     <color name="splash">#009DD6</color>
+    <color name="btn_normal">#009DD6</color>
+    <color name="btn_pressed">#0099EE</color>
+    <color name="btn_cancle_pressed">#ff4444</color>
+    <color name="btn_cancel_normal">#cc0000</color>
+
 </resources>

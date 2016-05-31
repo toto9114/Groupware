@@ -1,22 +1,24 @@
 package rnd.gw.plani.co.kr.groupware;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.widget.ImageView;
@@ -43,11 +45,6 @@ public class MainActivity extends AppCompatActivity
     private String userName = "";
     private static final String ANDROID = "android";
 
-//    private static final String MAIN_URL = "http://gw.plani.co.kr/main";
-
-    //    private static final String SEND_CONTACT_URL = "http://gw.plani.co.kr/send";
-
-    //    private AndroidWebInterface mWebInterface;
     MaterialMenuDrawable materialMenu;
     DrawerLayout drawerLayout;
     AppBarLayout appBarLayout;
@@ -59,6 +56,16 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         setTitle("i-Smart Groupware");
+
+        if (Build.VERSION.SDK_INT >= 21) {
+
+            // Set the status bar to dark-semi-transparentish
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
+                    WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+            // Set paddingTop of toolbar to height of status bar.
+            // Fixes statusbar covers toolbar issue
+        }
 
         HOME_URL = PropertyManager.getInstance().getDomain();
         if (!HOME_URL.contains("http://")) {
@@ -115,7 +122,14 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
-
+    public int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
     @Override
     protected void onStart() {
         super.onStart();
@@ -170,30 +184,13 @@ public class MainActivity extends AppCompatActivity
                         .commit();
                 isMenuSelect = true;
                 break;
-            case MenuFragment.MENU_ID_LOGOUT:  //로그아웃
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("로그아웃");
-                builder.setMessage("로그아웃 하시겠습니까?");
-                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        PropertyManager.getInstance().setUser(false);
-                        PropertyManager.getInstance().setAppId("");
-                        Intent i = new Intent(MainActivity.this, RegistActivity.class);
-                        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        startActivity(i);
-                        finish();
-                    }
-                }).setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
-                    }
-                }).show();
-                isMenuSelect = true;
-                break;
             case MenuFragment.MENU_ID_PC_VERSION: //pc버전보기
                 startActivity(new Intent(MainActivity.this, PcVersionActivity.class));
+                isMenuSelect = true;
+                break;
+            case MenuFragment.MENU_ID_LOGOUT:  //로그아웃
+                LogoutDialog dialog = new LogoutDialog();
+                dialog.show(getSupportFragmentManager(),"logout");
                 isMenuSelect = true;
                 break;
         }
@@ -235,7 +232,20 @@ public class MainActivity extends AppCompatActivity
             super.onPostExecute(aBoolean);
         }
     }
-
+    boolean isBackPressed = false;
+    public static final int MESSAGE_BACK_KEY_TIMEOUT =0;
+    public static final int BACK_KEY_TIME = 2000;
+    Handler mHandler = new Handler(Looper.myLooper(), new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch (msg.what){
+                case MESSAGE_BACK_KEY_TIMEOUT:
+                    isBackPressed = false;
+                    return true;
+            }
+            return false;
+        }
+    });
     @Override
     public void onBackPressed() {
         //super.onBackPressed();
@@ -243,24 +253,15 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.alert_title)
-                    .setMessage(R.string.alert_finish)
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    })
-                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-
-                        }
-                    })
-                    .setIcon(R.drawable.ic_exit_to_app_black_48dp)
-                    .setCancelable(false)
-                    .show();
+            if(!isBackPressed){
+                Toast.makeText(this,R.string.back_pressed_message,Toast.LENGTH_SHORT).show();
+                isBackPressed = true;
+                mHandler.sendEmptyMessageDelayed(MESSAGE_BACK_KEY_TIMEOUT, BACK_KEY_TIME);
+            }
+            else {
+                mHandler.removeMessages(MESSAGE_BACK_KEY_TIMEOUT);
+                finish();
+            }
         }
     }
 

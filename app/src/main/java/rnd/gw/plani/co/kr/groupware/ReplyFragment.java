@@ -38,12 +38,15 @@ public class ReplyFragment extends Fragment { //댓글 입력 창
 
     String sendUrl = "";
     String tableId = "";
+    String category = "";
     public static final String EXTRA_TABLE_ID = "tableId";
+    public static final String EXTRA_CATEGORY = "category";
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(getArguments()!=null){
             tableId = getArguments().getString(EXTRA_TABLE_ID,"");
+            category = getArguments().getString(EXTRA_CATEGORY,"");
         }
     }
 
@@ -62,7 +65,13 @@ public class ReplyFragment extends Fragment { //댓글 입력 창
                 new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
         ((WebViewActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        sendUrl = "http://"+ PropertyManager.getInstance().getDomain() + "/reception/reception/comment_save/tableid/liaison/id/";
+        if(category.equals("업무연락")|| category.equals("댓글알림")) {
+            sendUrl = "http://" + PropertyManager.getInstance().getDomain() + "/reception/reception/comment_save/tableid/liaison/id/";
+        }else if(category.equals("쪽지")){
+            sendUrl = "http://" + PropertyManager.getInstance().getDomain() + "/message/box/save/target/";
+        }else{
+            //no action
+        }
 
         return view;
     }
@@ -87,22 +96,43 @@ public class ReplyFragment extends Fragment { //댓글 입력 창
             dialog.setTitle("");
             dialog.setMessage("댓글 등록중입니다");
             dialog.show();
-            NetworkManager.getInstance().sendReply(getContext(), url, tableId, reply, new NetworkManager.OnResultListener<Boolean>() {
-                @Override
-                public void onSuccess(HttpRequest request, Boolean result) {
-                    dialog.dismiss();
-                    if (result) {
-                        Toast.makeText(getContext(), "댓글이 등록되었습니다.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), "댓글 등록이 실패하였습니다.", Toast.LENGTH_SHORT).show();
+            if(category.equals("업무연락") || category.equals("댓글알림")) {
+                NetworkManager.getInstance().sendReply(getContext(), url, tableId, reply, new NetworkManager.OnResultListener<Boolean>() {
+                    @Override
+                    public void onSuccess(HttpRequest request, Boolean result) {
+                        dialog.dismiss();
+                        if (result) {
+                            Toast.makeText(getContext(), "댓글이 등록되었습니다.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "댓글 등록이 실패하였습니다.", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                }
 
-                @Override
-                public void onFailure(HttpRequest request, int code, Throwable cause) {
-                    dialog.dismiss();
-                }
-            });
+                    @Override
+                    public void onFailure(HttpRequest request, int code, Throwable cause) {
+                        dialog.dismiss();
+                    }
+                });
+            }else if(category.equals("쪽지")){
+                NetworkManager.getInstance().sendNote(getContext(), url, tableId, reply, new NetworkManager.OnResultListener<Boolean>() {
+                    @Override
+                    public void onSuccess(HttpRequest request, Boolean result) {
+                        dialog.dismiss();
+                        if (result) {
+                            Toast.makeText(getContext(), "댓글이 등록되었습니다.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "댓글 등록이 실패하였습니다.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(HttpRequest request, int code, Throwable cause) {
+                        dialog.dismiss();
+                    }
+                });
+            }else{
+
+            }
         }
         if (id == android.R.id.home) {
             getActivity().getSupportFragmentManager()
@@ -110,5 +140,4 @@ public class ReplyFragment extends Fragment { //댓글 입력 창
         }
         return super.onOptionsItemSelected(item);
     }
-
 }

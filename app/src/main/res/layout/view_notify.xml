@@ -1,72 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:focusable="true"
-    android:clickable="true"
     android:background="@drawable/ripple_effect"
-    android:paddingTop="6dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
     android:paddingBottom="6dp"
-    android:paddingLeft="10dp"
-    android:paddingRight="10dp">
-
-    <ImageView
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:id="@+id/image_icon"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="6dp">
 
     <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_toRightOf="@+id/image_icon"
-        android:layout_toEndOf="@+id/image_icon"
-        android:layout_marginLeft="10dp">
-
+        android:layout_marginTop="3dp"
+        android:orientation="horizontal">
         <TextView
+            android:id="@+id/text_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
             android:text="New Text"
+            android:textSize="14sp"
+            android:layout_marginRight="8dp" />
+        <TextView
             android:id="@+id/text_category"
-            android:textStyle="bold" />
-
-        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="New Text"
-            android:id="@+id/text_title"
-            android:layout_marginTop="3dp" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="3dp">
-            <ImageView
-                android:layout_width="15dp"
-                android:layout_height="15dp"
-                android:src="@drawable/ic_face_black_48dp"
-                android:layout_gravity="center_vertical" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="New Text"
-                android:id="@+id/text_name"
-                android:layout_marginLeft="5dp"
-                android:textSize="10sp"
-                android:layout_gravity="center_vertical" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/text_time"
-                android:layout_marginLeft="6dp"
-                android:textSize="10sp" />
-        </LinearLayout>
+            android:textSize="10sp"
+            android:layout_gravity="center_vertical"
+            android:background="#dedede" />
 
     </LinearLayout>
 
-</RelativeLayout>
+
+    <TextView
+        android:id="@+id/text_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:singleLine="true"
+        android:text="New Text"
+        android:textSize="12sp" />
+
+
+
+
+</LinearLayout>

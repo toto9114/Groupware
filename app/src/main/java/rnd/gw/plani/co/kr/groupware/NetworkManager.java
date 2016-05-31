@@ -149,13 +149,14 @@ public class NetworkManager {
         return request;
     }
 
-    public HttpGet getNote(Context context, String url, final OnResultListener<Element> listener) { //고객정보 갖고오기
-        final CallbackObject<Element> callbackObject = new CallbackObject<>();
+    public HttpGet getNote(Context context, String url, final OnResultListener<NoteResult> listener) { //고객정보 갖고오기
+        final CallbackObject<NoteResult> callbackObject = new CallbackObject<>();
         final HttpGet request = new HttpGet(url);
         new AsyncTask<String, Integer, Boolean>() {
             @Override
             protected Boolean doInBackground(String... params) {
                 try {
+                    NoteResult noteResult = new NoteResult();
                     callbackObject.request = request;
                     callbackObject.listener = listener;
                     HttpResponse response = null;
@@ -164,8 +165,13 @@ public class NetworkManager {
                     String result = EntityUtils.toString(entity, "UTF-8");
                     Document doc = Jsoup.parse(result);
                     Element element = doc.select("table.bbs_table").get(0);
+                    Element target = doc.select("div.btn-group.pull-right").get(0);
+                    String targetId = target.getElementsByTag(HTMLElementName.A).get(0).attr("href").replace("/message/box/write/target/", "");
+                    noteResult.element = element;
+                    noteResult.targetId = targetId;
+                    Log.i("target",targetId);
                     if (response != null) {
-                        callbackObject.result = element;
+                        callbackObject.result = noteResult;
                         Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
                         mHandler.sendMessage(msg);
                     }
@@ -206,7 +212,14 @@ public class NetworkManager {
                     String lastUrl = url;
                     if (handler.lastRedirectedUri != null) {
                         lastUrl = handler.lastRedirectedUri.toString();
-                        String id = lastUrl.replace("http://" + PropertyManager.getInstance().getDomain() + "/reception/reception/view/tableid/liaison/id/", "");
+                        String id="";
+                        if(lastUrl.contains("/reception/reception/view/tableid/liaison/id/")) {
+                            id = lastUrl.replace("http://" + PropertyManager.getInstance().getDomain() + "/reception/reception/view/tableid/liaison/id/", "");
+                        }else {
+                            id = lastUrl.replace("http://"+PropertyManager.getInstance().getDomain()+"/transmission/transmission/view/tableid/liaison/id/","");
+                            int end =id.indexOf("#");
+                            id =id.substring(0,end);
+                        }
                         data.tableId = id;
                     }
                     HttpEntity entity = response.getEntity();
@@ -238,9 +251,9 @@ public class NetworkManager {
         return request;
     }
 
-    public HttpPost login(Context context, String url, String id, String password, final OnResultListener<Element> listener) { //로그인
+    public HttpPost login(Context context, String url, String id, String password, final OnResultListener<Boolean> listener) { //로그인
         httpClient.getCookieStore().clear();
-        final CallbackObject<Element> callbackObject = new CallbackObject<>();
+        final CallbackObject<Boolean> callbackObject = new CallbackObject<>();
         final ArrayList<NameValuePair> nameValuePairs =
                 new ArrayList<NameValuePair>();
         nameValuePairs.add(new BasicNameValuePair("userid", id));
@@ -285,7 +298,7 @@ public class NetworkManager {
                             Document doc = Jsoup.parse(result);
                             Element element = doc.select("section#content").get(0);
                             if (responsePost != null) {
-                                callbackObject.result = element;
+                                callbackObject.result = true;
                                 Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
                                 mHandler.sendMessage(msg);
                             }
@@ -306,7 +319,7 @@ public class NetworkManager {
 
                 if (!aBoolean) {
                     Toast.makeText(MyApplication.getContext(), "로그인 정보가 유효하지 않습니다", Toast.LENGTH_SHORT).show();
-                    callbackObject.result = null;
+                    callbackObject.result = false;
                     Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
                     mHandler.sendMessage(msg);
                 }
@@ -327,6 +340,61 @@ public class NetworkManager {
 
         nameValuePairs.add(new BasicNameValuePair("contents", reply));
         nameValuePairs.add(new BasicNameValuePair("pid", pid));
+        nameValuePairs.add(new BasicNameValuePair("alarm", "Y"));
+        nameValuePairs.add(new BasicNameValuePair("redirect", "eNortjK0UtJXsgZcMAkSAcc."));
+        final HttpPost httpPost = new HttpPost(url);
+        new AsyncTask<String, Integer, Boolean>() {
+            @Override
+            protected Boolean doInBackground(String... params) {
+                try {
+                    callbackObject.request = httpPost;
+                    callbackObject.listener = listener;
+                    UrlEncodedFormEntity entityRequest =
+                            new UrlEncodedFormEntity(nameValuePairs, "UTF-8");
+
+                    httpPost.setEntity(entityRequest);
+                    HttpResponse responsePost = httpClient.execute(httpPost);
+                    String lastUrl = url;
+                    if (handler.lastRedirectedUri != null) {
+                        lastUrl = handler.lastRedirectedUri.toString();
+                    }
+                    if (responsePost != null) {
+                        if (responsePost.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                            callbackObject.result = true;
+                        } else {
+                            callbackObject.result = false;
+                        }
+                        Message msg = mHandler.obtainMessage(MESSAGE_SUCCESS, callbackObject);
+                        mHandler.sendMessage(msg);
+                    }
+                } catch (IOException e) {
+//                e.printStackTrace();
+                    callbackObject.exception = e;
+                    Message msg = mHandler.obtainMessage(MESSAGE_FAILURE, callbackObject);
+                    mHandler.sendMessage(msg);
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean aBoolean) {
+                super.onPostExecute(aBoolean);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    cookieManager.flush();
+                }
+            }
+        }.execute();
+        return httpPost;
+    }
+    public HttpPost sendNote(Context context, final String url, String targetId, String reply, final OnResultListener<Boolean> listener) { //댓글달기
+        final CallbackObject<Boolean> callbackObject = new CallbackObject<>();
+        final MyRedirectHandler handler = new MyRedirectHandler();
+        httpClient.setRedirectHandler(handler);
+        final ArrayList<NameValuePair> nameValuePairs =
+                new ArrayList<NameValuePair>();
+
+        nameValuePairs.add(new BasicNameValuePair("message", reply));
+        nameValuePairs.add(new BasicNameValuePair("reception_line", "0|"+targetId+"|1"));
         nameValuePairs.add(new BasicNameValuePair("redirect", "eNortjK0UtJXsgZcMAkSAcc."));
         final HttpPost httpPost = new HttpPost(url);
         new AsyncTask<String, Integer, Boolean>() {

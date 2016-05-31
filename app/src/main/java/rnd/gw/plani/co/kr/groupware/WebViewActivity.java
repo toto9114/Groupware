@@ -55,6 +55,7 @@ public class WebViewActivity extends AppCompatActivity {
         Fragment f = new ReplyFragment();
         Bundle args = new Bundle();
         args.putString(ReplyFragment.EXTRA_TABLE_ID, tableId);
+        args.putString(ReplyFragment.EXTRA_CATEGORY, category);
         f.setArguments(args);
         getSupportFragmentManager().beginTransaction()
                 .setCustomAnimations(R.anim.slide_up,R.anim.slide_down)

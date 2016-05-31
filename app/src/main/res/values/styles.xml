@@ -12,7 +12,20 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
-
+    <style name="ColorCancelButton" parent="Widget.AppCompat.Button.Colored">
+        <item name="colorControlHighlight">@color/btn_cancle_pressed</item>
+        <item name="colorButtonNormal">@color/btn_cancel_normal</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+    <style name="ColorButton" parent="Widget.AppCompat.Button.Colored">
+        <item name="colorControlHighlight">@color/btn_pressed</item>
+        <item name="colorButtonNormal">@color/btn_normal</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+    <style name="BorderlessButton" parent="Widget.AppCompat.Button.Borderless.Colored">
+        <item name="colorButtonNormal">@android:color/transparent</item>
+        <item name="android:textColor">@color/colorAccent</item>
+    </style>
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />

@@ -12,7 +12,6 @@ import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -101,7 +100,8 @@ public class WebContentFragment extends Fragment {
 
         if (category.equals("업무연락") || category.equals("댓글알림") || category.contains("커뮤니티")) {
             setContact();
-        } else {
+        } else if (category.equals("쪽지")) {
+            replyBtn.setText("답장보내기");
             setNote();
         }
 
@@ -123,10 +123,11 @@ public class WebContentFragment extends Fragment {
         dialog.setMessage("loading...");
         dialog.setCancelable(false);
         dialog.show();
-        NetworkManager.getInstance().getNote(getContext(), url, new NetworkManager.OnResultListener<Element>() {
+        NetworkManager.getInstance().getNote(getContext(), url, new NetworkManager.OnResultListener<NoteResult>() {
             @Override
-            public void onSuccess(HttpRequest request, Element result) {
-                loadWebView(result.toString());
+            public void onSuccess(HttpRequest request, NoteResult result) {
+                loadWebView(result.element.toString());
+                ((WebViewActivity) getActivity()).setTableid(result.targetId);
                 dialog.dismiss();
             }
 
@@ -157,9 +158,9 @@ public class WebContentFragment extends Fragment {
             @Override
             public void onSuccess(HttpRequest request, ContentData result) {
                 Element content = result.element.getElementsByTag(HTMLElementName.TABLE).get(0);
-                Log.i("WebContent", content.getElementsByClass("btn-group").toString());
                 content.getElementsByClass("btn-group").remove();
-                if(content.hasClass("bbs_writer")) {
+
+                if (content.getElementsByClass("bbs_writer").get(0).getElementsByTag(HTMLElementName.SPAN).get(1) != null) {
                     content.getElementsByClass("bbs_writer").get(0).getElementsByTag(HTMLElementName.SPAN).get(1).remove();
                 }
                 Element reply = result.element.getElementsByClass("comment_entries").get(0);

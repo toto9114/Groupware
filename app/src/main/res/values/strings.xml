@@ -3,7 +3,7 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_web">WebActivity</string>
     <string name="alert_title">알림</string>
-    <string name="alert_finish">앱을 종료하시겠습니까?</string>
+    <string name="back_pressed_message">뒤로 버튼 한번 더 누르시면 종료됩니다.</string>
     <string name="alert_web_finish">PC보기를 종료하시겠습니까?</string>
     <string name="alert_reply">새로운 댓글이 있습니다</string>
     <string name="alert_contact">새로운 업무연락이 있습니다</string>
@@ -11,6 +11,8 @@
     <string name="notify">전체알림보기</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="logout_message">로그아웃 하시겠습니까?</string>
+    <string name="exit_web_message">PC보기를 종료하시겠습니까?</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="html_header"><![CDATA[<head>

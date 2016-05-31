@@ -15,6 +15,7 @@
         android:layout_alignParentTop="true" />
 
     <Button
+        android:theme="@style/BorderlessButton"
         android:id="@+id/btn_reply"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

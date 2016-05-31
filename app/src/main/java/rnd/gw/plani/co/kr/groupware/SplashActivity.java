@@ -16,13 +16,13 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.WindowManager;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
 import org.apache.http.HttpRequest;
-import org.jsoup.nodes.Element;
 
 import rnd.gw.plani.co.kr.groupware.GCM.PropertyManager;
 import rnd.gw.plani.co.kr.groupware.GCM.RegistrationIntentService;
@@ -95,26 +95,28 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             protected Boolean doInBackground(Void... params) {
                 String registrationToken = PropertyManager.getInstance().getRegistrationToken();
-
-                if (isUser) {
+                String domain = PropertyManager.getInstance().getDomain();
+                if (isUser && !TextUtils.isEmpty(domain)) {
                     String id = PropertyManager.getInstance().getUserId();
                     String pw = PropertyManager.getInstance().getPassword();
-                    String domain = PropertyManager.getInstance().getDomain();
+
                     if (!domain.contains("http://")) {
                         domain = "http://" + domain; //저장된 호스트주소 가져옴 ex)http://gw.plani.co.kr
                     }
-                    NetworkManager.getInstance().login(SplashActivity.this, domain, id, pw, new NetworkManager.OnResultListener<Element>() {
+                    NetworkManager.getInstance().login(SplashActivity.this, domain, id, pw, new NetworkManager.OnResultListener<Boolean>() {
                         @Override
-                        public void onSuccess(HttpRequest request, Element result) {
-                            startActivity(new Intent(SplashActivity.this, MainActivity.class));
-                            finish();
+                        public void onSuccess(HttpRequest request, Boolean result) {
+                            if(result) {
+                                startActivity(new Intent(SplashActivity.this, MainActivity.class));
+                                finish();
+                            }
                         }
 
                         @Override
                         public void onFailure(HttpRequest request, int code, Throwable cause) {
                             AlertDialog.Builder builder = new AlertDialog.Builder(SplashActivity.this);
                             builder.setTitle(R.string.alert_title)
-                                    .setMessage("네트워크에 연결 상태를 확인해주세요")
+                                    .setMessage("네트워크 연결 상태를 확인해주세요")
                                     .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
